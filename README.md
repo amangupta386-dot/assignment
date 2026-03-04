@@ -24,3 +24,7 @@ Location-based skilled trades marketplace built with Node.js (JavaScript) micros
 2. Build and start stack: `docker compose up --build`
 3. Gateway available at `http://localhost`
 
+## Kubernetes (Local, Single Port)
+- Kubernetes manifests are in `infra/k8s`.
+- Follow `infra/k8s/README.md` to run all services and expose only one local entrypoint (`http://kaarigar.local`).
+
