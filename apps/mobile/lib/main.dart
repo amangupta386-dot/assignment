@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_bloc/flutter_bloc.dart";
 import "core/router.dart";
+import "core/theme/app_theme.dart";
 import "features/workers/data/workers_repository.dart";
 import "features/workers/presentation/bloc/workers_bloc.dart";
 
@@ -28,7 +29,8 @@ class KaarigarApp extends StatelessWidget {
         child: MaterialApp.router(
           title: "Kaarigar",
           routerConfig: appRouter,
-          theme: ThemeData(colorSchemeSeed: const Color(0xFF0F766E), useMaterial3: true),
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.light,
         ),
       ),
     );
