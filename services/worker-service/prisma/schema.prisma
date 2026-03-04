@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Worker {
+  id              String              @id @default(uuid())
+  userId          String              @unique
+  bio             String
+  experienceYears Int
+  available       Boolean             @default(true)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  skills          WorkerSkill[]
+  availability    WorkerAvailability?
+  insurance       WorkerInsurance?
+  subscription    WorkerSubscription?
+}
+
+model WorkerSkill {
+  id        String @id @default(uuid())
+  workerId  String
+  skillName String
+  level     String
+  worker    Worker @relation(fields: [workerId], references: [id])
+}
+
+model WorkerAvailability {
+  id        String @id @default(uuid())
+  workerId  String @unique
+  weekdays  String
+  startTime String
+  endTime   String
+  worker    Worker @relation(fields: [workerId], references: [id])
+}
+
+model WorkerInsurance {
+  id           String   @id @default(uuid())
+  workerId     String   @unique
+  providerName String
+  policyNumber String
+  validUntil   DateTime
+  worker       Worker   @relation(fields: [workerId], references: [id])
+}
+
+model WorkerSubscription {
+  id        String   @id @default(uuid())
+  workerId  String   @unique
+  planName  String
+  isActive  Boolean
+  expiresAt DateTime
+  worker    Worker   @relation(fields: [workerId], references: [id])
+}

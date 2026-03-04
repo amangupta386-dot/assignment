@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum JobStatus {
+  CREATED
+  ASSIGNED
+  ACCEPTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model Job {
+  id             String             @id @default(uuid())
+  customerId     String
+  title          String
+  description    String
+  latitude       Float
+  longitude      Float
+  budget         Float
+  suggestedPrice Float
+  status         JobStatus
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  history        JobStatusHistory[]
+  assignments    JobAssignment[]
+}
+
+model JobStatusHistory {
+  id        String    @id @default(uuid())
+  jobId     String
+  status    JobStatus
+  note      String?
+  createdAt DateTime  @default(now())
+  job       Job       @relation(fields: [jobId], references: [id])
+}
+
+model JobAssignment {
+  id         String   @id @default(uuid())
+  jobId      String
+  workerId   String
+  distanceKm Float
+  assignedAt DateTime @default(now())
+  job        Job      @relation(fields: [jobId], references: [id])
+}

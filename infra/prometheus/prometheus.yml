@@ -1,0 +1,35 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: "api-gateway"
+    static_configs:
+      - targets: ["api-gateway:3000"]
+
+  - job_name: "auth-service"
+    static_configs:
+      - targets: ["auth-service:3000"]
+
+  - job_name: "worker-service"
+    static_configs:
+      - targets: ["worker-service:3000"]
+
+  - job_name: "job-service"
+    static_configs:
+      - targets: ["job-service:3000"]
+
+  - job_name: "geolocation-service"
+    static_configs:
+      - targets: ["geolocation-service:3000"]
+
+  - job_name: "review-rating-service"
+    static_configs:
+      - targets: ["review-rating-service:3000"]
+
+  - job_name: "payment-service"
+    static_configs:
+      - targets: ["payment-service:3000"]
+
+  - job_name: "notification-service"
+    static_configs:
+      - targets: ["notification-service:3000"]

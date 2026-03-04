@@ -1,0 +1,17 @@
+{
+  "name": "@kaarigar/shared",
+  "version": "0.1.0",
+  "main": "src/index.js",
+  "scripts": {
+    "build": "echo no-build-shared",
+    "dev": "echo no-dev-shared",
+    "lint": "echo lint-shared",
+    "test": "echo test-shared"
+  },
+  "dependencies": {
+    "ioredis": "^5.4.1",
+    "kafkajs": "^2.2.4",
+    "pino": "^9.4.0",
+    "uuid": "^10.0.0"
+  }
+}
