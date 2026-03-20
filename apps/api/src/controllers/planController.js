@@ -33,6 +33,42 @@ const getAssignedGoalProblem = async (userId, date) => {
   return goalProblems[Math.max(0, dayOffset) % goalProblems.length];
 };
 
+const getAssignedGoalProblemContext = async (userId, date) => {
+  const assignedGoalProblem = await getAssignedGoalProblem(userId, date);
+  if (!assignedGoalProblem) {
+    return {
+      assignedGoalProblem: null,
+      dayOneCompleted: false,
+      assignedProblemCurrentStage: null
+    };
+  }
+
+  const problem = await Problem.findOne({
+    where: {
+      userId,
+      title: assignedGoalProblem.problemName,
+      pattern: assignedGoalProblem.patternName
+    },
+    order: [["id", "DESC"]]
+  });
+
+  if (!problem) {
+    return {
+      assignedGoalProblem,
+      dayOneCompleted: false,
+      assignedProblemCurrentStage: null
+    };
+  }
+
+  const progress = await RevisionProgress.findOne({ where: { problemId: problem.id } });
+
+  return {
+    assignedGoalProblem,
+    dayOneCompleted: Boolean(progress && progress.currentStage !== revisionStages.REVISE),
+    assignedProblemCurrentStage: progress?.currentStage || null
+  };
+};
+
 const problemStageTaskKeys = new Set(["newProblem", "deepProblems", "mockProblems", "problems"]);
 
 const promoteDayOneToDayTwo = async ({ userId, date, taskKey }) => {
@@ -103,10 +139,13 @@ const generateWeekPlan = async (req, res) => {
   }
 
   const enriched = await Promise.all(
-    created.map(async (plan) => ({
-      ...plan.toJSON(),
-      assignedGoalProblem: await getAssignedGoalProblem(userId, plan.date)
-    }))
+    created.map(async (plan) => {
+      const assignment = await getAssignedGoalProblemContext(userId, plan.date);
+      return {
+        ...plan.toJSON(),
+        ...assignment
+      };
+    })
   );
 
   res.status(201).json({ plans: enriched });
@@ -122,11 +161,12 @@ const getTodayPlan = async (req, res) => {
     where: { userId, date: today },
     defaults: { userId, date: today, dayType, tasks }
   });
+  const assignment = await getAssignedGoalProblemContext(userId, today);
 
   res.json({
     plan: {
       ...plan.toJSON(),
-      assignedGoalProblem: await getAssignedGoalProblem(userId, today)
+      ...assignment
     }
   });
 };
@@ -157,10 +197,11 @@ const markTaskDone = async (req, res) => {
 
   await plan.save();
   await promoteDayOneToDayTwo({ userId, date: today, taskKey: key });
+  const assignment = await getAssignedGoalProblemContext(userId, today);
   res.json({
     plan: {
       ...plan.toJSON(),
-      assignedGoalProblem: await getAssignedGoalProblem(userId, today)
+      ...assignment
     }
   });
 };

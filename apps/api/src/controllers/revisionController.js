@@ -7,34 +7,18 @@ const { addDays, toDateOnly } = require('../utils/date');
 const getTodayRevisions = async (req, res) => {
   const userId = req.user.id;
   const today = toDateOnly(new Date());
-
   const rows = await RevisionProgress.findAll({
     include: [{ model: Problem, where: { userId }, attributes: ['id', 'title', 'pattern', 'difficulty', 'platform'] }],
     where: {
       currentStage: { [Op.notIn]: ['REVISE', 'COMPLETED'] },
-      nextReviewDate: { [Op.lte]: today }
+      nextReviewDate: {
+        [Op.lte]: addDays(today, 10)
+      }
     },
     order: [['nextReviewDate', 'ASC']]
   });
 
-  if (rows.length > 0) {
-    return res.json({ revisions: rows });
-  }
-
-  const upcoming = await RevisionProgress.findAll({
-    include: [{ model: Problem, where: { userId }, attributes: ['id', 'title', 'pattern', 'difficulty', 'platform'] }],
-    where: {
-      currentStage: { [Op.notIn]: ['REVISE', 'COMPLETED'] },
-      nextReviewDate: {
-        [Op.gt]: today,
-        [Op.lte]: addDays(today, 10)
-      }
-    },
-    order: [['nextReviewDate', 'ASC']],
-    limit: 10
-  });
-
-  return res.json({ revisions: upcoming });
+  return res.json({ revisions: rows });
 };
 
 const completeRevision = async (req, res) => {

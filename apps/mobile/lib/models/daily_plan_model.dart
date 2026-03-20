@@ -8,6 +8,8 @@ class DailyPlanModel {
     required this.status,
     required this.tasks,
     this.assignedGoalProblem,
+    this.dayOneCompleted = false,
+    this.assignedProblemCurrentStage,
   });
 
   final int id;
@@ -16,6 +18,8 @@ class DailyPlanModel {
   final String status;
   final Map<String, dynamic> tasks;
   final GoalProblemItem? assignedGoalProblem;
+  final bool dayOneCompleted;
+  final String? assignedProblemCurrentStage;
 
   factory DailyPlanModel.fromJson(Map<String, dynamic> json) {
     return DailyPlanModel(
@@ -27,6 +31,8 @@ class DailyPlanModel {
       assignedGoalProblem: json['assignedGoalProblem'] == null
           ? null
           : GoalProblemItem.fromJson(Map<String, dynamic>.from(json['assignedGoalProblem'] as Map)),
+      dayOneCompleted: json['dayOneCompleted'] as bool? ?? false,
+      assignedProblemCurrentStage: json['assignedProblemCurrentStage'] as String?,
     );
   }
 }

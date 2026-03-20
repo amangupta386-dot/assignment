@@ -7,6 +7,23 @@ import 'bloc/plan_bloc.dart';
 class TodayPlanScreen extends StatelessWidget {
   const TodayPlanScreen({super.key});
 
+  String _stageLabel(String? stage) {
+    switch (stage) {
+      case 'REVISE':
+        return 'Day 1: Learn about problem';
+      case 'SOLVE_AGAIN':
+        return 'Day 2: Revise the concept and solve problem';
+      case 'SOLVE_WITHOUT_SEEING':
+        return 'Day 5: Solve problem without seeing';
+      case 'FINAL_REVISIT':
+        return 'Day 10: Revisit with timer';
+      case 'COMPLETED':
+        return 'Completed';
+      default:
+        return 'Not started';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,6 +49,7 @@ class TodayPlanScreen extends StatelessWidget {
             final data = Map<String, dynamic>.from(plan.tasks[dayOneTaskKey] as Map);
             dayOneAlreadyDone = (data['done'] as int? ?? 0) > 0;
           }
+          dayOneAlreadyDone = dayOneAlreadyDone || plan.dayOneCompleted;
           final dayTwoDueDate = DateFormat('yyyy-MM-dd').format(DateTime.now().add(const Duration(days: 1)));
 
           return ListView(
@@ -59,6 +77,8 @@ class TodayPlanScreen extends StatelessWidget {
                         if (dayOneAlreadyDone) ...[
                           const SizedBox(height: 6),
                           Text('Stage 2 is scheduled for $dayTwoDueDate'),
+                          const SizedBox(height: 4),
+                          Text('Current Revision Stage: ${_stageLabel(plan.assignedProblemCurrentStage)}'),
                         ],
                       ],
                     ),

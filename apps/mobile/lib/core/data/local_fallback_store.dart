@@ -135,6 +135,8 @@ class LocalFallbackStore {
         'revisions': <String, dynamic>{'target': 5, 'done': 0},
       },
       assignedGoalProblem: assigned,
+      dayOneCompleted: _isAssignedProblemBeyondDayOne(assigned),
+      assignedProblemCurrentStage: _assignedProblemCurrentStage(assigned),
     );
     return _todayPlan!;
   }
@@ -161,8 +163,21 @@ class LocalFallbackStore {
       status: completed ? 'COMPLETED' : 'PENDING',
       tasks: tasks,
       assignedGoalProblem: plan.assignedGoalProblem,
+      dayOneCompleted: _isAssignedProblemBeyondDayOne(plan.assignedGoalProblem),
+      assignedProblemCurrentStage: _assignedProblemCurrentStage(plan.assignedGoalProblem),
     );
     _promoteDayOneForTodayPlan(plan.date, key);
+    final refreshed = _todayPlan!;
+    _todayPlan = DailyPlanModel(
+      id: refreshed.id,
+      date: refreshed.date,
+      dayType: refreshed.dayType,
+      status: refreshed.status,
+      tasks: refreshed.tasks,
+      assignedGoalProblem: refreshed.assignedGoalProblem,
+      dayOneCompleted: _isAssignedProblemBeyondDayOne(refreshed.assignedGoalProblem),
+      assignedProblemCurrentStage: _assignedProblemCurrentStage(refreshed.assignedGoalProblem),
+    );
     return _todayPlan!;
   }
 
@@ -312,6 +327,25 @@ class LocalFallbackStore {
   String _dayTypeFromWeekday(int weekday) {
     if (weekday == DateTime.saturday || weekday == DateTime.sunday) return 'HEAVY';
     return 'LIGHT';
+  }
+
+  bool _isAssignedProblemBeyondDayOne(GoalProblemItem? assigned) {
+    final stage = _assignedProblemCurrentStage(assigned);
+    if (stage == null) return false;
+    return stage != _stageDay1Learn;
+  }
+
+  String? _assignedProblemCurrentStage(GoalProblemItem? assigned) {
+    if (assigned == null) return null;
+    final matchingProblems = _problems.where(
+      (p) =>
+          p.title.trim().toLowerCase() == assigned.problemName.trim().toLowerCase() &&
+          p.pattern.trim().toLowerCase() == assigned.patternName.trim().toLowerCase(),
+    );
+    if (matchingProblems.isEmpty) return null;
+
+    final latest = matchingProblems.reduce((a, b) => a.id > b.id ? a : b);
+    return _revisions[latest.id]?.currentStage;
   }
 
   int _reviewDayOffset(String stage) {
