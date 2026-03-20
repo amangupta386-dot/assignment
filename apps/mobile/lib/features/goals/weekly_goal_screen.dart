@@ -106,133 +106,135 @@ class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Weekly Goal')),
-      body: BlocConsumer<GoalBloc, GoalState>(
-        listenWhen: (previous, current) =>
-            previous.saveVersion != current.saveVersion,
-        listener: (context, state) {
-          _resetFormState();
-          setState(() {});
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Goal timeline saved')),
-          );
-        },
-        builder: (context, state) {
-          return Padding(
-            padding: const EdgeInsets.all(16),
-            child: ListView(
-              children: [
-                Text('Weekly Timeline',
-                    style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: _pickFromDate,
-                        child: Text('From: ${_displayDate(_fromDate)}'),
+      body: SelectionArea(
+        child: BlocConsumer<GoalBloc, GoalState>(
+          listenWhen: (previous, current) =>
+              previous.saveVersion != current.saveVersion,
+          listener: (context, state) {
+            _resetFormState();
+            setState(() {});
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Goal timeline saved')),
+            );
+          },
+          builder: (context, state) {
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: ListView(
+                children: [
+                  Text('Weekly Timeline',
+                      style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: _pickFromDate,
+                          child: Text('From: ${_displayDate(_fromDate)}'),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: _pickToDate,
-                        child: Text('To: ${_displayDate(_toDate)}'),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: _pickToDate,
+                          child: Text('To: ${_displayDate(_toDate)}'),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Text('Problems For Timeline',
-                    style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 8),
-                ...List<Widget>.generate(_rows.length, (index) {
-                  final row = _rows[index];
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        children: [
-                          TextField(
-                            controller: row.problemController,
-                            decoration: const InputDecoration(
-                                labelText: 'Problem Name'),
-                          ),
-                          const SizedBox(height: 8),
-                          TextField(
-                            controller: row.patternController,
-                            decoration: const InputDecoration(
-                                labelText: 'Pattern Name'),
-                          ),
-                          if (_rows.length > 1)
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton(
-                                onPressed: () => _removeRow(index),
-                                child: const Text('Remove'),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  );
-                }),
-                OutlinedButton.icon(
-                  onPressed: _addRow,
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add Problem'),
-                ),
-                const SizedBox(height: 12),
-                FilledButton(
-                  onPressed: state.isLoading
-                      ? null
-                      : () {
-                          final goalProblems = _collectGoalProblems();
-                          if (_fromDate == null || _toDate == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content:
-                                      Text('Please select from and to dates')),
-                            );
-                            return;
-                          }
-                          if (_toDate!.isBefore(_fromDate!)) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content:
-                                      Text('To date must be after from date')),
-                            );
-                            return;
-                          }
-                          if (goalProblems.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text(
-                                      'Add at least one valid problem and pattern')),
-                            );
-                            return;
-                          }
-
-                          context.read<GoalBloc>().add(
-                                SaveGoal(
-                                  fromDate: _fromDate!,
-                                  toDate: _toDate!,
-                                  goalProblems: goalProblems,
-                                ),
-                              );
-                        },
-                  child: Text(
-                      state.isLoading ? 'Saving...' : 'Save Goal Timeline'),
-                ),
-                if (state.error != null) ...[
+                    ],
+                  ),
                   const SizedBox(height: 16),
+                  Text('Problems For Timeline',
+                      style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 8),
+                  ...List<Widget>.generate(_rows.length, (index) {
+                    final row = _rows[index];
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          children: [
+                            TextField(
+                              controller: row.problemController,
+                              decoration: const InputDecoration(
+                                  labelText: 'Problem Name'),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: row.patternController,
+                              decoration: const InputDecoration(
+                                  labelText: 'Pattern Name'),
+                            ),
+                            if (_rows.length > 1)
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton(
+                                  onPressed: () => _removeRow(index),
+                                  child: const Text('Remove'),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
+                  OutlinedButton.icon(
+                    onPressed: _addRow,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add Problem'),
+                  ),
                   const SizedBox(height: 12),
-                  Text(state.error!),
+                  FilledButton(
+                    onPressed: state.isLoading
+                        ? null
+                        : () {
+                            final goalProblems = _collectGoalProblems();
+                            if (_fromDate == null || _toDate == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text(
+                                        'Please select from and to dates')),
+                              );
+                              return;
+                            }
+                            if (_toDate!.isBefore(_fromDate!)) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text(
+                                        'To date must be after from date')),
+                              );
+                              return;
+                            }
+                            if (goalProblems.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text(
+                                        'Add at least one valid problem and pattern')),
+                              );
+                              return;
+                            }
+
+                            context.read<GoalBloc>().add(
+                                  SaveGoal(
+                                    fromDate: _fromDate!,
+                                    toDate: _toDate!,
+                                    goalProblems: goalProblems,
+                                  ),
+                                );
+                          },
+                    child: Text(
+                        state.isLoading ? 'Saving...' : 'Save Goal Timeline'),
+                  ),
+                  if (state.error != null) ...[
+                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
+                    Text(state.error!),
+                  ],
                 ],
-              ],
-            ),
-          );
-        },
+              ),
+            );
+          },
+        ),
       ),
     );
   }

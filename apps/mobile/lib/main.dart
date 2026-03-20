@@ -44,11 +44,19 @@ class MyApp extends StatelessWidget {
       ],
       child: MultiBlocProvider(
         providers: [
-          BlocProvider(create: (context) => ProblemBloc(context.read<ProblemRepository>())),
-          BlocProvider(create: (context) => RevisionBloc(context.read<RevisionRepository>())),
-          BlocProvider(create: (context) => PlanBloc(context.read<PlanRepository>())),
-          BlocProvider(create: (context) => GoalBloc(context.read<GoalRepository>())),
-          BlocProvider(create: (context) => AnalyticsBloc(context.read<AnalyticsRepository>())),
+          BlocProvider(
+              create: (context) =>
+                  ProblemBloc(context.read<ProblemRepository>())),
+          BlocProvider(
+              create: (context) =>
+                  RevisionBloc(context.read<RevisionRepository>())),
+          BlocProvider(
+              create: (context) => PlanBloc(context.read<PlanRepository>())),
+          BlocProvider(
+              create: (context) => GoalBloc(context.read<GoalRepository>())),
+          BlocProvider(
+              create: (context) =>
+                  AnalyticsBloc(context.read<AnalyticsRepository>())),
         ],
         child: MaterialApp(
           debugShowCheckedModeBanner: false,
