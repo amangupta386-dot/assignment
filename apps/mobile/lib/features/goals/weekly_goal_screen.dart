@@ -22,9 +22,6 @@ class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
   void initState() {
     super.initState();
     _resetFormState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<GoalBloc>().add(LoadMonthlyTimeline(month: DateTime.now()));
-    });
   }
 
   @override
@@ -227,22 +224,8 @@ class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
                   child: Text(
                       state.isLoading ? 'Saving...' : 'Save Goal Timeline'),
                 ),
-                const SizedBox(height: 16),
-                Text('Monthly Timeline',
-                    style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 8),
-                if (state.timelines.isEmpty)
-                  const Text('No timeline entries for this month')
-                else
-                  ...state.timelines.map(
-                    (entry) => Card(
-                      child: ListTile(
-                        title: Text('${entry.fromDate} to ${entry.toDate}'),
-                        subtitle: Text('${entry.goalProblems.length} problems'),
-                      ),
-                    ),
-                  ),
                 if (state.error != null) ...[
+                  const SizedBox(height: 16),
                   const SizedBox(height: 12),
                   Text(state.error!),
                 ],
