@@ -12,6 +12,8 @@ abstract class GoalEvent extends Equatable {
 
 class LoadCurrentGoal extends GoalEvent {}
 
+class ResetGoalState extends GoalEvent {}
+
 class SaveGoal extends GoalEvent {
   const SaveGoal({
     required this.fromDate,
@@ -41,39 +43,48 @@ class GoalState extends Equatable {
     this.goal,
     this.timelines = const [],
     this.error,
+    this.saveVersion = 0,
   });
 
   final bool isLoading;
   final WeeklyGoalModel? goal;
   final List<WeeklyGoalModel> timelines;
   final String? error;
+  final int saveVersion;
 
   GoalState copyWith({
     bool? isLoading,
     WeeklyGoalModel? goal,
     List<WeeklyGoalModel>? timelines,
     String? error,
+    int? saveVersion,
   }) {
     return GoalState(
       isLoading: isLoading ?? this.isLoading,
       goal: goal ?? this.goal,
       timelines: timelines ?? this.timelines,
       error: error,
+      saveVersion: saveVersion ?? this.saveVersion,
     );
   }
 
   @override
-  List<Object?> get props => [isLoading, goal, timelines, error];
+  List<Object?> get props => [isLoading, goal, timelines, error, saveVersion];
 }
 
 class GoalBloc extends Bloc<GoalEvent, GoalState> {
   GoalBloc(this._repository) : super(const GoalState()) {
+    on<ResetGoalState>(_onReset);
     on<LoadCurrentGoal>(_onLoad);
     on<SaveGoal>(_onSave);
     on<LoadMonthlyTimeline>(_onLoadMonthlyTimeline);
   }
 
   final GoalRepository _repository;
+
+  void _onReset(ResetGoalState event, Emitter<GoalState> emit) {
+    emit(const GoalState());
+  }
 
   Future<void> _onLoad(LoadCurrentGoal event, Emitter<GoalState> emit) async {
     emit(state.copyWith(isLoading: true, error: null));
@@ -93,15 +104,18 @@ class GoalBloc extends Bloc<GoalEvent, GoalState> {
         toDate: event.toDate,
         goalProblems: event.goalProblems,
       );
-      final goal = await _repository.getCurrentWeeklyGoal();
       final timelines = await _repository.getMonthlyTimeline(event.fromDate);
-      emit(state.copyWith(isLoading: false, goal: goal, timelines: timelines, error: null));
+      emit(GoalState(
+        timelines: timelines,
+        saveVersion: state.saveVersion + 1,
+      ));
     } catch (e) {
       emit(state.copyWith(isLoading: false, error: e.toString()));
     }
   }
 
-  Future<void> _onLoadMonthlyTimeline(LoadMonthlyTimeline event, Emitter<GoalState> emit) async {
+  Future<void> _onLoadMonthlyTimeline(
+      LoadMonthlyTimeline event, Emitter<GoalState> emit) async {
     emit(state.copyWith(isLoading: true, error: null));
     try {
       final timelines = await _repository.getMonthlyTimeline(event.month);

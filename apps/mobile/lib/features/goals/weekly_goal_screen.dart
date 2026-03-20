@@ -17,15 +17,13 @@ class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
   final DateFormat _dateFormat = DateFormat('yyyy-MM-dd');
   DateTime? _fromDate;
   DateTime? _toDate;
-  String _lastSeedSignature = '';
 
   @override
   void initState() {
     super.initState();
+    _resetFormState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final bloc = context.read<GoalBloc>();
-      bloc.add(LoadCurrentGoal());
-      bloc.add(LoadMonthlyTimeline(month: DateTime.now()));
+      context.read<GoalBloc>().add(LoadMonthlyTimeline(month: DateTime.now()));
     });
   }
 
@@ -80,6 +78,17 @@ class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
     });
   }
 
+  void _resetFormState() {
+    for (final row in _rows) {
+      row.dispose();
+    }
+    _rows
+      ..clear()
+      ..add(_GoalProblemRow());
+    _fromDate = null;
+    _toDate = null;
+  }
+
   List<GoalProblemItem> _collectGoalProblems() {
     return _rows
         .map(
@@ -88,50 +97,35 @@ class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
             patternName: row.patternController.text.trim(),
           ),
         )
-        .where((item) => item.problemName.isNotEmpty && item.patternName.isNotEmpty)
+        .where((item) =>
+            item.problemName.isNotEmpty && item.patternName.isNotEmpty)
         .toList();
   }
 
-  void _seedFromGoal(WeeklyGoalModel goal) {
-    final signature = '${goal.fromDate}|${goal.toDate}|${goal.goalProblems.map((e) => '${e.problemName}|${e.patternName}').join('||')}';
-    if (signature == _lastSeedSignature) return;
-    _lastSeedSignature = signature;
-
-    final parsedFrom = DateTime.tryParse(goal.fromDate);
-    final parsedTo = DateTime.tryParse(goal.toDate);
-    if (parsedFrom != null) _fromDate = parsedFrom;
-    if (parsedTo != null) _toDate = parsedTo;
-
-    if (goal.goalProblems.isNotEmpty) {
-      for (final row in _rows) {
-        row.dispose();
-      }
-      _rows
-        ..clear()
-        ..addAll(
-          goal.goalProblems.map((item) => _GoalProblemRow(problem: item.problemName, pattern: item.patternName)),
-        );
-    }
-  }
-
-  String _displayDate(DateTime? value) => value == null ? 'Select date' : _dateFormat.format(value);
+  String _displayDate(DateTime? value) =>
+      value == null ? 'Select date' : _dateFormat.format(value);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Weekly Goal')),
-      body: BlocBuilder<GoalBloc, GoalState>(
+      body: BlocConsumer<GoalBloc, GoalState>(
+        listenWhen: (previous, current) =>
+            previous.saveVersion != current.saveVersion,
+        listener: (context, state) {
+          _resetFormState();
+          setState(() {});
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Goal timeline saved')),
+          );
+        },
         builder: (context, state) {
-          final goal = state.goal;
-          if (goal != null) {
-            _seedFromGoal(goal);
-          }
-
           return Padding(
             padding: const EdgeInsets.all(16),
             child: ListView(
               children: [
-                Text('Weekly Timeline', style: Theme.of(context).textTheme.titleMedium),
+                Text('Weekly Timeline',
+                    style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
                 Row(
                   children: [
@@ -151,7 +145,8 @@ class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                Text('Problems For Timeline', style: Theme.of(context).textTheme.titleMedium),
+                Text('Problems For Timeline',
+                    style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
                 ...List<Widget>.generate(_rows.length, (index) {
                   final row = _rows[index];
@@ -163,12 +158,14 @@ class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
                         children: [
                           TextField(
                             controller: row.problemController,
-                            decoration: const InputDecoration(labelText: 'Problem Name'),
+                            decoration: const InputDecoration(
+                                labelText: 'Problem Name'),
                           ),
                           const SizedBox(height: 8),
                           TextField(
                             controller: row.patternController,
-                            decoration: const InputDecoration(labelText: 'Pattern Name'),
+                            decoration: const InputDecoration(
+                                labelText: 'Pattern Name'),
                           ),
                           if (_rows.length > 1)
                             Align(
@@ -196,19 +193,25 @@ class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
                           final goalProblems = _collectGoalProblems();
                           if (_fromDate == null || _toDate == null) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Please select from and to dates')),
+                              const SnackBar(
+                                  content:
+                                      Text('Please select from and to dates')),
                             );
                             return;
                           }
                           if (_toDate!.isBefore(_fromDate!)) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('To date must be after from date')),
+                              const SnackBar(
+                                  content:
+                                      Text('To date must be after from date')),
                             );
                             return;
                           }
                           if (goalProblems.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Add at least one valid problem and pattern')),
+                              const SnackBar(
+                                  content: Text(
+                                      'Add at least one valid problem and pattern')),
                             );
                             return;
                           }
@@ -221,10 +224,12 @@ class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
                                 ),
                               );
                         },
-                  child: Text(state.isLoading ? 'Saving...' : 'Save Goal Timeline'),
+                  child: Text(
+                      state.isLoading ? 'Saving...' : 'Save Goal Timeline'),
                 ),
                 const SizedBox(height: 16),
-                Text('Monthly Timeline', style: Theme.of(context).textTheme.titleMedium),
+                Text('Monthly Timeline',
+                    style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
                 if (state.timelines.isEmpty)
                   const Text('No timeline entries for this month')
