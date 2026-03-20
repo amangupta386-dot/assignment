@@ -1,7 +1,8 @@
 const dayjs = require("dayjs");
+const { Op } = require("sequelize");
 const { DailyPlan, WeeklyGoal } = require("../models");
 const { getDayType, createTasksByDayType } = require("../services/planEngine");
-const { startOfWeekMonday, toDateOnly } = require("../utils/date");
+const { toDateOnly } = require("../utils/date");
 
 const sanitizeGoalProblems = (input) =>
   (Array.isArray(input) ? input : [])
@@ -12,16 +13,22 @@ const sanitizeGoalProblems = (input) =>
     .filter((item) => item.problemName && item.patternName);
 
 const getAssignedGoalProblem = async (userId, date) => {
-  const weekStart = startOfWeekMonday(date);
-  const goal = await WeeklyGoal.findOne({ where: { userId, weekStart } });
+  const dateOnly = dayjs(date).format("YYYY-MM-DD");
+  const goal = await WeeklyGoal.findOne({
+    where: {
+      userId,
+      weekStart: { [Op.lte]: dateOnly },
+      weekEnd: { [Op.gte]: dateOnly }
+    },
+    order: [["weekStart", "DESC"]]
+  });
   if (!goal) return null;
 
   const goalProblems = sanitizeGoalProblems(goal.focusPatterns);
   if (!goalProblems.length) return null;
 
-  const dayIndex = dayjs(date).day();
-  const mondayBasedIndex = dayIndex === 0 ? 6 : dayIndex - 1;
-  return goalProblems[mondayBasedIndex % goalProblems.length];
+  const dayOffset = dayjs(dateOnly).diff(dayjs(goal.weekStart), "day");
+  return goalProblems[Math.max(0, dayOffset) % goalProblems.length];
 };
 
 const generateWeekPlan = async (req, res) => {

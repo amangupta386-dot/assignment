@@ -20,7 +20,7 @@ class LocalFallbackStore {
   final Map<int, _RevisionRecord> _revisions = <int, _RevisionRecord>{};
   final Map<String, int> _failCountByProblem = <String, int>{};
   final List<DateTime> _revisionCompletions = <DateTime>[];
-  WeeklyGoalModel? _goal;
+  final List<WeeklyGoalModel> _timelines = <WeeklyGoalModel>[];
   DailyPlanModel? _todayPlan;
   final Set<String> _activeDays = <String>{};
 
@@ -160,22 +160,66 @@ class LocalFallbackStore {
   }
 
   void upsertWeeklyGoal({
+    required String fromDate,
+    required String toDate,
     required List<GoalProblemItem> goalProblems,
   }) {
-    _goal = WeeklyGoalModel(
+    _timelines.removeWhere((g) => g.fromDate == fromDate && g.toDate == toDate);
+    _timelines.add(WeeklyGoalModel(
+      fromDate: fromDate,
+      toDate: toDate,
       goalProblems: goalProblems,
-    );
+    ));
+    _timelines.sort((a, b) => a.fromDate.compareTo(b.fromDate));
     _todayPlan = null;
   }
 
-  WeeklyGoalModel? getCurrentWeeklyGoal() => _goal;
+  void syncProblemsFromGoal(List<GoalProblemItem> goalProblems) {
+    for (final item in goalProblems) {
+      final exists = _problems.any(
+        (p) =>
+            p.title.trim().toLowerCase() == item.problemName.trim().toLowerCase() &&
+            p.pattern.trim().toLowerCase() == item.patternName.trim().toLowerCase(),
+      );
+      if (exists) continue;
+
+      addProblem(
+        title: item.problemName,
+        platform: 'OTHER',
+        difficulty: 'MEDIUM',
+        pattern: item.patternName,
+        initialStatus: 'NOT_SOLVED',
+      );
+    }
+  }
+
+  WeeklyGoalModel? getCurrentWeeklyGoal() {
+    final today = _toDate(DateTime.now());
+    final matches = _timelines.where((g) => g.fromDate.compareTo(today) <= 0 && g.toDate.compareTo(today) >= 0).toList();
+    if (matches.isEmpty) return null;
+    matches.sort((a, b) => b.fromDate.compareTo(a.fromDate));
+    return matches.first;
+  }
+
+  List<WeeklyGoalModel> getMonthlyTimeline(DateTime month) {
+    final monthStart = DateTime(month.year, month.month, 1);
+    final monthEnd = DateTime(month.year, month.month + 1, 0);
+    return _timelines.where((g) {
+      final from = DateTime.tryParse(g.fromDate);
+      final to = DateTime.tryParse(g.toDate);
+      if (from == null || to == null) return false;
+      return !(to.isBefore(monthStart) || from.isAfter(monthEnd));
+    }).toList()
+      ..sort((a, b) => a.fromDate.compareTo(b.fromDate));
+  }
 
   WeeklyAnalytics getWeeklyAnalytics() {
     final now = DateTime.now();
     final start = now.subtract(Duration(days: now.weekday - 1));
     final end = start.add(const Duration(days: 6));
-    final targetProblems = _goal?.goalProblems.length ?? 0;
-    final targetRevisions = _goal?.goalProblems.length ?? 0;
+    final activeGoal = getCurrentWeeklyGoal();
+    final targetProblems = activeGoal?.goalProblems.length ?? 0;
+    final targetRevisions = activeGoal?.goalProblems.length ?? 0;
 
     final actualProblems = _problems.where((p) => !_isBeforeDay(p.createdAt, start) && !_isAfterDay(p.createdAt, end)).length;
     final actualRevisions = _revisionCompletions.where((d) => !_isBeforeDay(d, start) && !_isAfterDay(d, end)).length;
@@ -222,10 +266,18 @@ class LocalFallbackStore {
   bool _isAfterDay(DateTime left, DateTime right) => DateTime(left.year, left.month, left.day).isAfter(DateTime(right.year, right.month, right.day));
 
   GoalProblemItem? _assignedGoalProblemForDate(DateTime date) {
-    final goals = _goal?.goalProblems ?? const <GoalProblemItem>[];
-    if (goals.isEmpty) return null;
-    final mondayBasedIndex = date.weekday - 1;
-    return goals[mondayBasedIndex % goals.length];
+    final dateOnly = _toDate(date);
+    final goal = _timelines.where((g) => g.fromDate.compareTo(dateOnly) <= 0 && g.toDate.compareTo(dateOnly) >= 0).fold<WeeklyGoalModel?>(
+          null,
+          (prev, curr) => prev == null || curr.fromDate.compareTo(prev.fromDate) > 0 ? curr : prev,
+        );
+    if (goal == null || goal.goalProblems.isEmpty) return null;
+
+    final startDate = DateTime.tryParse(goal.fromDate);
+    if (startDate == null) return goal.goalProblems.first;
+    final dayOffset = DateTime(date.year, date.month, date.day).difference(DateTime(startDate.year, startDate.month, startDate.day)).inDays;
+    final index = dayOffset < 0 ? 0 : dayOffset % goal.goalProblems.length;
+    return goal.goalProblems[index];
   }
 
   String _dayTypeFromWeekday(int weekday) {

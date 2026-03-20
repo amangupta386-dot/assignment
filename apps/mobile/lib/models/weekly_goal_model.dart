@@ -1,8 +1,12 @@
 class WeeklyGoalModel {
   const WeeklyGoalModel({
+    required this.fromDate,
+    required this.toDate,
     required this.goalProblems,
   });
 
+  final String fromDate;
+  final String toDate;
   final List<GoalProblemItem> goalProblems;
 
   factory WeeklyGoalModel.fromJson(Map<String, dynamic> json) {
@@ -10,6 +14,8 @@ class WeeklyGoalModel {
         (json['focusPatterns'] as List<dynamic>?) ??
         const [];
     return WeeklyGoalModel(
+      fromDate: (json['fromDate'] ?? json['weekStart'] ?? '').toString(),
+      toDate: (json['toDate'] ?? json['weekEnd'] ?? '').toString(),
       goalProblems: rawProblems
           .whereType<Map>()
           .map((e) => GoalProblemItem.fromJson(Map<String, dynamic>.from(e)))

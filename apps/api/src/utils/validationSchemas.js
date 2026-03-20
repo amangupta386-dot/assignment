@@ -9,7 +9,8 @@ const createProblemSchema = Joi.object({
 });
 
 const weeklyGoalSchema = Joi.object({
-  weekStart: Joi.date().iso().optional(),
+  fromDate: Joi.date().iso().required(),
+  toDate: Joi.date().iso().min(Joi.ref("fromDate")).required(),
   goalProblems: Joi.array()
     .items(
       Joi.object({
