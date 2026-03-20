@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../shared/widgets/metric_card.dart';
@@ -13,7 +13,7 @@ class WeeklyAnalyticsScreen extends StatelessWidget {
       appBar: AppBar(title: const Text('Weekly Analytics')),
       body: BlocBuilder<AnalyticsBloc, AnalyticsState>(
         builder: (context, state) {
-          if (state.isLoading) return const Center(child: CircularProgressIndicator());
+          if (state.isLoading && state.weekly == null) return const Center(child: CircularProgressIndicator());
           if (state.error != null) return Center(child: Text(state.error!));
           final weekly = state.weekly;
           if (weekly == null) return const Center(child: Text('No analytics data'));
@@ -30,7 +30,7 @@ class WeeklyAnalyticsScreen extends StatelessWidget {
               ...state.patterns.map(
                 (p) => ListTile(
                   title: Text(p.pattern),
-                  subtitle: Text('Solved ${p.solved} � Failed ${p.failed}'),
+                  subtitle: Text('Solved ${p.solved} • Failed ${p.failed}'),
                   trailing: Text('${p.successRate}%'),
                 ),
               ),
@@ -41,3 +41,4 @@ class WeeklyAnalyticsScreen extends StatelessWidget {
     );
   }
 }
+

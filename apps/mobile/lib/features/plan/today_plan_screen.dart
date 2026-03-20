@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'bloc/plan_bloc.dart';
@@ -12,7 +12,7 @@ class TodayPlanScreen extends StatelessWidget {
       appBar: AppBar(title: const Text('Today Plan')),
       body: BlocBuilder<PlanBloc, PlanState>(
         builder: (context, state) {
-          if (state.isLoading) return const Center(child: CircularProgressIndicator());
+          if (state.isLoading && state.plan == null) return const Center(child: CircularProgressIndicator());
           if (state.error != null) return Center(child: Text(state.error!));
           final plan = state.plan;
           if (plan == null) return const Center(child: Text('No plan available'));
@@ -48,3 +48,4 @@ class TodayPlanScreen extends StatelessWidget {
     );
   }
 }
+

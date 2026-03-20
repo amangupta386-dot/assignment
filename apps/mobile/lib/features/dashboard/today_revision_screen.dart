@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:dsa_prep_coach/features/revision/bloc/revision_bloc.dart';
@@ -12,7 +12,7 @@ class TodayRevisionScreen extends StatelessWidget {
       appBar: AppBar(title: const Text('Today Revisions')),
       body: BlocBuilder<RevisionBloc, RevisionState>(
         builder: (context, state) {
-          if (state.isLoading) return const Center(child: CircularProgressIndicator());
+          if (state.isLoading && state.items.isEmpty) return const Center(child: CircularProgressIndicator());
           if (state.error != null) return Center(child: Text(state.error!));
           if (state.items.isEmpty) return const Center(child: Text('No due revisions today'));
 
@@ -29,7 +29,7 @@ class TodayRevisionScreen extends StatelessWidget {
                     children: [
                       Text(item.title, style: Theme.of(context).textTheme.titleMedium),
                       const SizedBox(height: 4),
-                      Text('${item.currentStage} • ${item.pattern} • due ${item.nextReviewDate}'),
+                      Text('${item.currentStage} â€¢ ${item.pattern} â€¢ due ${item.nextReviewDate}'),
                       const SizedBox(height: 8),
                       Row(
                         children: [
@@ -55,3 +55,4 @@ class TodayRevisionScreen extends StatelessWidget {
     );
   }
 }
+

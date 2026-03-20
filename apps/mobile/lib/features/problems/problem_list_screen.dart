@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+ï»¿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'bloc/problem_bloc.dart';
@@ -12,7 +12,7 @@ class ProblemListScreen extends StatelessWidget {
       appBar: AppBar(title: const Text('Problems')),
       body: BlocBuilder<ProblemBloc, ProblemState>(
         builder: (context, state) {
-          if (state.isLoading) {
+          if (state.isLoading && state.items.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
           if (state.error != null) {
@@ -24,7 +24,7 @@ class ProblemListScreen extends StatelessWidget {
               final item = state.items[index];
               return ListTile(
                 title: Text(item.title),
-                subtitle: Text('${item.pattern} • ${item.difficulty} • ${item.platform}'),
+                subtitle: Text('${item.pattern} â€¢ ${item.difficulty} â€¢ ${item.platform}'),
                 trailing: Text(item.initialStatus),
               );
             },
@@ -34,3 +34,4 @@ class ProblemListScreen extends StatelessWidget {
     );
   }
 }
+
