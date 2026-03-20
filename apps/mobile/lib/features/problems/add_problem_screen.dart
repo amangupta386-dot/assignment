@@ -37,7 +37,7 @@ class _AddProblemScreenState extends State<AddProblemScreen> {
             TextField(controller: _patternController, decoration: const InputDecoration(labelText: 'Pattern')),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              value: _platform,
+              initialValue: _platform,
               items: const ['LEETCODE', 'GFG', 'CODESTUDIO', 'OTHER']
                   .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                   .toList(),
@@ -46,7 +46,7 @@ class _AddProblemScreenState extends State<AddProblemScreen> {
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              value: _difficulty,
+              initialValue: _difficulty,
               items: const ['EASY', 'MEDIUM', 'HARD']
                   .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                   .toList(),
@@ -55,7 +55,7 @@ class _AddProblemScreenState extends State<AddProblemScreen> {
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              value: _status,
+              initialValue: _status,
               items: const ['SOLVED', 'WITH_HELP', 'NOT_SOLVED']
                   .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                   .toList(),

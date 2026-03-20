@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../analytics/bloc/analytics_bloc.dart';
-import '../analytics/weekly_analytics_screen.dart';
-import '../goals/bloc/goal_bloc.dart';
-import '../goals/weekly_goal_screen.dart';
-import '../plan/bloc/plan_bloc.dart';
-import '../plan/today_plan_screen.dart';
-import '../problems/add_problem_screen.dart';
-import '../problems/bloc/problem_bloc.dart';
-import '../problems/problem_list_screen.dart';
-import '../revision/bloc/revision_bloc.dart';
-import '../revision/today_revision_screen.dart';
+import 'package:dsa_prep_coach/features/analytics/bloc/analytics_bloc.dart';
+import 'package:dsa_prep_coach/features/goals/bloc/goal_bloc.dart';
+import 'package:dsa_prep_coach/features/goals/weekly_goal_screen.dart';
+import 'package:dsa_prep_coach/features/plan/bloc/plan_bloc.dart';
+import 'package:dsa_prep_coach/features/plan/today_plan_screen.dart';
+import 'package:dsa_prep_coach/features/problems/add_problem_screen.dart';
+import 'package:dsa_prep_coach/features/problems/bloc/problem_bloc.dart';
+import 'package:dsa_prep_coach/features/revision/bloc/revision_bloc.dart';
+import 'problem_list_screen.dart';
+import 'today_revision_screen.dart';
+import 'weekly_analytics_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
