@@ -29,15 +29,18 @@ class GoalProblemItem {
   const GoalProblemItem({
     required this.problemName,
     required this.patternName,
+    required this.timeComplexity,
   });
 
   final String problemName;
   final String patternName;
+  final String timeComplexity;
 
   factory GoalProblemItem.fromJson(Map<String, dynamic> json) {
     return GoalProblemItem(
       problemName: (json['problemName'] ?? '').toString(),
       patternName: (json['patternName'] ?? '').toString(),
+      timeComplexity: (json['timeComplexity'] ?? 'Not set').toString(),
     );
   }
 
@@ -45,6 +48,7 @@ class GoalProblemItem {
     return {
       'problemName': problemName,
       'patternName': patternName,
+      'timeComplexity': timeComplexity,
     };
   }
 }

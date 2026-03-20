@@ -25,7 +25,6 @@ class PatternNoteEditorScreen extends StatefulWidget {
 class _PatternNoteEditorScreenState extends State<PatternNoteEditorScreen> {
   final _formKey = GlobalKey<FormState>();
   final _patternController = TextEditingController();
-  final _complexityController = TextEditingController();
   final ImagePicker _imagePicker = ImagePicker();
   String? _imagePath;
   bool _isSaving = false;
@@ -35,14 +34,12 @@ class _PatternNoteEditorScreenState extends State<PatternNoteEditorScreen> {
     super.initState();
     _patternController.text =
         widget.existingNote?.patternName ?? widget.initialPatternName ?? '';
-    _complexityController.text = widget.existingNote?.timeComplexity ?? '';
     _imagePath = widget.existingNote?.imagePath;
   }
 
   @override
   void dispose() {
     _patternController.dispose();
-    _complexityController.dispose();
     super.dispose();
   }
 
@@ -73,7 +70,6 @@ class _PatternNoteEditorScreenState extends State<PatternNoteEditorScreen> {
     try {
       final note = await context.read<PatternNoteRepository>().saveNote(
             patternName: _patternController.text,
-            timeComplexity: _complexityController.text,
             imageSourcePath: _imagePath!,
             previousPatternName: widget.existingNote?.patternName,
           );
@@ -131,7 +127,7 @@ class _PatternNoteEditorScreenState extends State<PatternNoteEditorScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Save the pattern name, time complexity, and a reference image so you can open it from anywhere in the app.',
+                  'Save the pattern name and a reference image so you can open it from anywhere in the app.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.white.withValues(alpha: 0.9),
                       ),
@@ -153,21 +149,6 @@ class _PatternNoteEditorScreenState extends State<PatternNoteEditorScreen> {
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Enter a pattern name';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _complexityController,
-                  decoration: const InputDecoration(
-                    labelText: 'Time Complexity',
-                    hintText: 'Example: O(n) or O(log n)',
-                    prefixIcon: Icon(Icons.timer_outlined),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Enter the time complexity';
                     }
                     return null;
                   },

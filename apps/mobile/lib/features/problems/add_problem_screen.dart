@@ -12,6 +12,7 @@ class AddProblemScreen extends StatefulWidget {
 
 class _AddProblemScreenState extends State<AddProblemScreen> {
   final _titleController = TextEditingController();
+  final _timeComplexityController = TextEditingController(text: 'O(n)');
   String _platform = 'LEETCODE';
   String _difficulty = 'EASY';
   String _status = 'SOLVED';
@@ -20,6 +21,7 @@ class _AddProblemScreenState extends State<AddProblemScreen> {
   @override
   void dispose() {
     _titleController.dispose();
+    _timeComplexityController.dispose();
     _patternController.dispose();
     super.dispose();
   }
@@ -32,9 +34,19 @@ class _AddProblemScreenState extends State<AddProblemScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            TextField(controller: _titleController, decoration: const InputDecoration(labelText: 'Title')),
+            TextField(
+                controller: _titleController,
+                decoration: const InputDecoration(labelText: 'Title')),
             const SizedBox(height: 8),
-            TextField(controller: _patternController, decoration: const InputDecoration(labelText: 'Pattern')),
+            TextField(
+                controller: _patternController,
+                decoration: const InputDecoration(labelText: 'Pattern')),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _timeComplexityController,
+              decoration:
+                  const InputDecoration(labelText: 'Optimized Time Complexity'),
+            ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
               initialValue: _platform,
@@ -66,7 +78,8 @@ class _AddProblemScreenState extends State<AddProblemScreen> {
             BlocConsumer<ProblemBloc, ProblemState>(
               listener: (context, state) {
                 if (state.error != null) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.error!)));
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(SnackBar(content: Text(state.error!)));
                 } else if (!state.isLoading) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Problem added')),
@@ -84,6 +97,8 @@ class _AddProblemScreenState extends State<AddProblemScreen> {
                                   platform: _platform,
                                   difficulty: _difficulty,
                                   pattern: _patternController.text.trim(),
+                                  timeComplexity:
+                                      _timeComplexityController.text.trim(),
                                   initialStatus: _status,
                                 ),
                               );

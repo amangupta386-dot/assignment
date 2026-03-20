@@ -12,7 +12,10 @@ class ProblemRepository {
     try {
       final response = await _apiClient.get('/problems');
       final data = response.data['problems'] as List<dynamic>;
-      return data.map((e) => ProblemModel.fromJson(Map<String, dynamic>.from(e as Map))).toList();
+      return data
+          .map(
+              (e) => ProblemModel.fromJson(Map<String, dynamic>.from(e as Map)))
+          .toList();
     } catch (e) {
       if (_apiClient.isConnectivityError(e)) return _local.getProblems();
       rethrow;
@@ -24,6 +27,7 @@ class ProblemRepository {
     required String platform,
     required String difficulty,
     required String pattern,
+    required String timeComplexity,
     required String initialStatus,
   }) async {
     try {
@@ -32,6 +36,7 @@ class ProblemRepository {
         'platform': platform,
         'difficulty': difficulty,
         'pattern': pattern,
+        'timeComplexity': timeComplexity,
         'initialStatus': initialStatus,
       });
     } catch (e) {
@@ -41,6 +46,7 @@ class ProblemRepository {
           platform: platform,
           difficulty: difficulty,
           pattern: pattern,
+          timeComplexity: timeComplexity,
           initialStatus: initialStatus,
         );
         return;

@@ -43,12 +43,10 @@ class PatternNoteRepository {
 
   Future<PatternNoteModel> saveNote({
     required String patternName,
-    required String timeComplexity,
     required String imageSourcePath,
     String? previousPatternName,
   }) async {
     final cleanedPattern = patternName.trim();
-    final cleanedComplexity = timeComplexity.trim();
     final normalizedCurrent = normalizePattern(cleanedPattern);
     final normalizedPrevious = previousPatternName == null
         ? normalizedCurrent
@@ -70,7 +68,6 @@ class PatternNoteRepository {
 
     final note = PatternNoteModel(
       patternName: cleanedPattern,
-      timeComplexity: cleanedComplexity,
       imagePath: savedImagePath,
       updatedAt: DateTime.now().toIso8601String(),
     );

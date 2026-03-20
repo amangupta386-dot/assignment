@@ -102,10 +102,13 @@ class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
           (row) => GoalProblemItem(
             problemName: row.problemController.text.trim(),
             patternName: row.patternController.text.trim(),
+            timeComplexity: row.timeComplexityController.text.trim(),
           ),
         )
         .where((item) =>
-            item.problemName.isNotEmpty && item.patternName.isNotEmpty)
+            item.problemName.isNotEmpty &&
+            item.patternName.isNotEmpty &&
+            item.timeComplexity.isNotEmpty)
         .toList();
   }
 
@@ -291,6 +294,16 @@ class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
                               prefixIcon: Icon(Icons.hub_outlined),
                             ),
                           ),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: row.timeComplexityController,
+                            onChanged: (_) => setState(() {}),
+                            decoration: const InputDecoration(
+                              labelText: 'Optimized Time Complexity',
+                              prefixIcon: Icon(Icons.timer_outlined),
+                              hintText: 'Example: O(n) or O(log n)',
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -374,16 +387,22 @@ class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
 }
 
 class _GoalProblemRow {
-  _GoalProblemRow({String problem = '', String pattern = ''})
-      : problemController = TextEditingController(text: problem),
-        patternController = TextEditingController(text: pattern);
+  _GoalProblemRow({
+    String problem = '',
+    String pattern = '',
+    String timeComplexity = 'O(n)',
+  })  : problemController = TextEditingController(text: problem),
+        patternController = TextEditingController(text: pattern),
+        timeComplexityController = TextEditingController(text: timeComplexity);
 
   final TextEditingController problemController;
   final TextEditingController patternController;
+  final TextEditingController timeComplexityController;
 
   void dispose() {
     problemController.dispose();
     patternController.dispose();
+    timeComplexityController.dispose();
   }
 }
 

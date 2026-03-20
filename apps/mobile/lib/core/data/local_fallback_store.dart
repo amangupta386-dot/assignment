@@ -45,6 +45,7 @@ class LocalFallbackStore {
           platform: p.platform,
           difficulty: p.difficulty,
           pattern: p.pattern,
+          timeComplexity: p.timeComplexity,
           initialStatus: status,
         );
       },
@@ -57,6 +58,7 @@ class LocalFallbackStore {
     required String platform,
     required String difficulty,
     required String pattern,
+    required String timeComplexity,
     required String initialStatus,
   }) {
     final now = DateTime.now();
@@ -68,6 +70,7 @@ class LocalFallbackStore {
         platform: platform,
         difficulty: difficulty,
         pattern: pattern,
+        timeComplexity: timeComplexity,
         initialStatus: initialStatus,
         createdAt: now,
       ),
@@ -240,6 +243,7 @@ class LocalFallbackStore {
         platform: 'OTHER',
         difficulty: 'MEDIUM',
         pattern: item.patternName,
+        timeComplexity: item.timeComplexity,
         initialStatus: 'NOT_SOLVED',
       );
     }
@@ -719,6 +723,7 @@ class _ProblemRecord {
     required this.platform,
     required this.difficulty,
     required this.pattern,
+    required this.timeComplexity,
     required this.initialStatus,
     required this.createdAt,
   });
@@ -728,6 +733,7 @@ class _ProblemRecord {
   final String platform;
   final String difficulty;
   final String pattern;
+  final String timeComplexity;
   final String initialStatus;
   final DateTime createdAt;
 }

@@ -10,6 +10,12 @@ const Problem = sequelize.define(
     platform: { type: DataTypes.STRING, allowNull: false },
     difficulty: { type: DataTypes.STRING, allowNull: false },
     pattern: { type: DataTypes.STRING, allowNull: false },
+    timeComplexity: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: "time_complexity",
+      defaultValue: "Not set"
+    },
     initialStatus: { type: DataTypes.STRING, allowNull: false, field: "initial_status", defaultValue: "SOLVED" }
   },
   {

@@ -121,10 +121,6 @@ class _PatternNoteDetailScreenState extends State<PatternNoteDetailScreen> {
                             runSpacing: 10,
                             children: [
                               _InfoPill(
-                                label: 'Time Complexity',
-                                value: _note!.timeComplexity,
-                              ),
-                              _InfoPill(
                                 label: 'Updated',
                                 value: _formatDate(_note!.updatedAt),
                               ),

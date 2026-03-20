@@ -5,6 +5,7 @@ const createProblemSchema = Joi.object({
   platform: Joi.string().trim().valid("LEETCODE", "GFG", "CODESTUDIO", "OTHER").required(),
   difficulty: Joi.string().trim().valid("EASY", "MEDIUM", "HARD").required(),
   pattern: Joi.string().trim().min(2).max(80).required(),
+  timeComplexity: Joi.string().trim().min(2).max(60).required(),
   initialStatus: Joi.string().trim().valid("SOLVED", "WITH_HELP", "NOT_SOLVED").default("SOLVED")
 });
 
@@ -15,7 +16,8 @@ const weeklyGoalSchema = Joi.object({
     .items(
       Joi.object({
         problemName: Joi.string().trim().min(2).max(120).required(),
-        patternName: Joi.string().trim().min(2).max(120).required()
+        patternName: Joi.string().trim().min(2).max(120).required(),
+        timeComplexity: Joi.string().trim().min(2).max(60).required()
       })
     )
     .min(1)

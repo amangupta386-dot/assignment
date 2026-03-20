@@ -5,6 +5,7 @@ class ProblemModel {
     required this.platform,
     required this.difficulty,
     required this.pattern,
+    required this.timeComplexity,
     required this.initialStatus,
   });
 
@@ -13,6 +14,7 @@ class ProblemModel {
   final String platform;
   final String difficulty;
   final String pattern;
+  final String timeComplexity;
   final String initialStatus;
 
   factory ProblemModel.fromJson(Map<String, dynamic> json) {
@@ -22,6 +24,7 @@ class ProblemModel {
       platform: json['platform'] as String,
       difficulty: json['difficulty'] as String,
       pattern: json['pattern'] as String,
+      timeComplexity: (json['timeComplexity'] ?? 'Not set') as String,
       initialStatus: json['initialStatus'] as String? ?? 'SOLVED',
     );
   }

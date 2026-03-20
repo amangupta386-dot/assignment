@@ -18,6 +18,7 @@ class AddProblem extends ProblemEvent {
     required this.platform,
     required this.difficulty,
     required this.pattern,
+    required this.timeComplexity,
     required this.initialStatus,
   });
 
@@ -25,10 +26,18 @@ class AddProblem extends ProblemEvent {
   final String platform;
   final String difficulty;
   final String pattern;
+  final String timeComplexity;
   final String initialStatus;
 
   @override
-  List<Object?> get props => [title, platform, difficulty, pattern, initialStatus];
+  List<Object?> get props => [
+        title,
+        platform,
+        difficulty,
+        pattern,
+        timeComplexity,
+        initialStatus,
+      ];
 }
 
 class ProblemState extends Equatable {
@@ -42,7 +51,8 @@ class ProblemState extends Equatable {
   final List<ProblemModel> items;
   final String? error;
 
-  ProblemState copyWith({bool? isLoading, List<ProblemModel>? items, String? error}) {
+  ProblemState copyWith(
+      {bool? isLoading, List<ProblemModel>? items, String? error}) {
     return ProblemState(
       isLoading: isLoading ?? this.isLoading,
       items: items ?? this.items,
@@ -72,7 +82,8 @@ class ProblemBloc extends Bloc<ProblemEvent, ProblemState> {
     }
   }
 
-  Future<void> _onAddProblem(AddProblem event, Emitter<ProblemState> emit) async {
+  Future<void> _onAddProblem(
+      AddProblem event, Emitter<ProblemState> emit) async {
     emit(state.copyWith(isLoading: true, error: null));
     try {
       await _repository.addProblem(
@@ -80,6 +91,7 @@ class ProblemBloc extends Bloc<ProblemEvent, ProblemState> {
         platform: event.platform,
         difficulty: event.difficulty,
         pattern: event.pattern,
+        timeComplexity: event.timeComplexity,
         initialStatus: event.initialStatus,
       );
       final items = await _repository.getProblems();

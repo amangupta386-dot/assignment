@@ -198,6 +198,11 @@ class _ProblemCard extends StatelessWidget {
                   background: colorScheme.surfaceContainerLow,
                 ),
                 _MetaChip(
+                  icon: Icons.timer_outlined,
+                  label: 'Optimized: ${item.timeComplexity}',
+                  background: colorScheme.surfaceContainerLow,
+                ),
+                _MetaChip(
                   icon: Icons.language,
                   label: item.platform,
                   background: colorScheme.surfaceContainerLow,

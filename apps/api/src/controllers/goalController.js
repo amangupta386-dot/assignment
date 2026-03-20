@@ -6,9 +6,10 @@ const sanitizeGoalProblems = (input) =>
   (Array.isArray(input) ? input : [])
     .map((item) => ({
       problemName: String(item?.problemName || "").trim(),
-      patternName: String(item?.patternName || "").trim()
+      patternName: String(item?.patternName || "").trim(),
+      timeComplexity: String(item?.timeComplexity || "").trim()
     }))
-    .filter((item) => item.problemName && item.patternName);
+    .filter((item) => item.problemName && item.patternName && item.timeComplexity);
 
 const serializeGoal = (goal) => {
   const goalJson = goal.toJSON();

@@ -10,9 +10,10 @@ const sanitizeGoalProblems = (input) =>
   (Array.isArray(input) ? input : [])
     .map((item) => ({
       problemName: String(item?.problemName || "").trim(),
-      patternName: String(item?.patternName || "").trim()
+      patternName: String(item?.patternName || "").trim(),
+      timeComplexity: String(item?.timeComplexity || "").trim()
     }))
-    .filter((item) => item.problemName && item.patternName);
+    .filter((item) => item.problemName && item.patternName && item.timeComplexity);
 
 const getActiveGoalProblems = async (userId, date) => {
   const dateOnly = dayjs(date).format("YYYY-MM-DD");
@@ -105,12 +106,13 @@ const promoteDayOneToDayTwo = async ({ userId, date, taskKey }) => {
   });
 
   if (!problem) {
-    problem = await Problem.create({
+      problem = await Problem.create({
       userId,
       title: assigned.problemName,
       platform: "OTHER",
       difficulty: "MEDIUM",
       pattern: assigned.patternName,
+      timeComplexity: assigned.timeComplexity,
       initialStatus: "NOT_SOLVED"
     });
   }

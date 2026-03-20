@@ -6,7 +6,7 @@ require("./models");
 const start = async () => {
   try {
     await sequelize.authenticate();
-    await sequelize.sync();
+    await sequelize.sync(env.nodeEnv === "production" ? {} : { alter: true });
     app.listen(env.port, () => {
       console.log(`API running on port ${env.port}`);
     });

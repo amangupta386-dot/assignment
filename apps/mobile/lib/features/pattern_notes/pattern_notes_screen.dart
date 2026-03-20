@@ -197,11 +197,6 @@ class _PatternNotesScreenState extends State<PatternNotesScreen> {
                                         ?.copyWith(fontWeight: FontWeight.w700),
                                   ),
                                   const SizedBox(height: 8),
-                                  _ListPill(
-                                    icon: Icons.timer_outlined,
-                                    label: note.timeComplexity,
-                                  ),
-                                  const SizedBox(height: 8),
                                   Text(
                                     'Updated ${_formatDate(note.updatedAt)}',
                                     style: Theme.of(context)
@@ -266,36 +261,6 @@ class _HeroStat extends StatelessWidget {
               fontSize: 18,
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ListPill extends StatelessWidget {
-  const _ListPill({
-    required this.icon,
-    required this.label,
-  });
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16),
-          const SizedBox(width: 6),
-          Text(label),
         ],
       ),
     );

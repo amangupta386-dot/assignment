@@ -99,6 +99,7 @@ class GoalRepository {
           'platform': 'OTHER',
           'difficulty': 'MEDIUM',
           'pattern': item.patternName,
+          'timeComplexity': item.timeComplexity,
           'initialStatus': 'NOT_SOLVED',
         });
         existingKeys.add(key);
