@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 import 'bloc/plan_bloc.dart';
 
@@ -31,6 +32,7 @@ class TodayPlanScreen extends StatelessWidget {
             final data = Map<String, dynamic>.from(plan.tasks[dayOneTaskKey] as Map);
             dayOneAlreadyDone = (data['done'] as int? ?? 0) > 0;
           }
+          final dayTwoDueDate = DateFormat('yyyy-MM-dd').format(DateTime.now().add(const Duration(days: 1)));
 
           return ListView(
             padding: const EdgeInsets.all(16),
@@ -54,6 +56,10 @@ class TodayPlanScreen extends StatelessWidget {
                               : () => context.read<PlanBloc>().add(MarkTaskDone(dayOneTaskKey!)),
                           child: Text(dayOneAlreadyDone ? 'Day 1 Completed' : 'Mark Day 1 Done'),
                         ),
+                        if (dayOneAlreadyDone) ...[
+                          const SizedBox(height: 6),
+                          Text('Stage 2 is scheduled for $dayTwoDueDate'),
+                        ],
                       ],
                     ),
                     leading: const Icon(Icons.flag_outlined),
@@ -83,4 +89,5 @@ class TodayPlanScreen extends StatelessWidget {
     );
   }
 }
+
 

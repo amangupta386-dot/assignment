@@ -2,21 +2,33 @@ import 'package:flutter/foundation.dart';
 
 class AppConfig {
   static const String _definedBaseUrl = String.fromEnvironment('API_BASE_URL');
+  static const String _definedApiHost = String.fromEnvironment('API_HOST');
+  static const String _definedApiPort = String.fromEnvironment('API_PORT', defaultValue: '4000');
 
-  static String get baseUrl {
-    if (_definedBaseUrl.isNotEmpty) return _definedBaseUrl;
+  static List<String> get baseUrls {
+    if (_definedBaseUrl.isNotEmpty) return <String>[_definedBaseUrl];
+    if (_definedApiHost.isNotEmpty) return <String>['http://$_definedApiHost:$_definedApiPort/api'];
 
-    if (kIsWeb) return 'http://127.0.0.1:4000/api';
+    if (kIsWeb) return <String>['http://localhost:4000/api'];
 
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
-        return 'http://10.0.2.2:4000/api';
+        // Try emulator host mapping first, then adb-reverse localhost fallback.
+        return <String>[
+          'http://10.0.2.2:4000/api',
+          'http://127.0.0.1:4000/api',
+          'http://localhost:4000/api',
+        ];
       case TargetPlatform.iOS:
       case TargetPlatform.macOS:
       case TargetPlatform.windows:
       case TargetPlatform.linux:
       case TargetPlatform.fuchsia:
-        return 'http://127.0.0.1:4000/api';
+        return <String>['http://127.0.0.1:4000/api'];
     }
+  }
+
+  static String get baseUrl {
+    return baseUrls.first;
   }
 }

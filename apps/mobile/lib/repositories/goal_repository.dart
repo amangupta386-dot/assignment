@@ -1,5 +1,6 @@
 import '../core/network/api_client.dart';
 import '../core/data/local_fallback_store.dart';
+import '../core/utils/app_config.dart';
 import '../models/weekly_goal_model.dart';
 
 class GoalRepository {
@@ -25,13 +26,11 @@ class GoalRepository {
       await _syncGoalProblemsToProblems(goalProblems);
     } catch (e) {
       if (_apiClient.isConnectivityError(e)) {
-        _local.upsertWeeklyGoal(
-          fromDate: fromDateString,
-          toDate: toDateString,
-          goalProblems: goalProblems,
+        throw Exception(
+          'Unable to save weekly goal to database. API server is unreachable. '
+          'Please start backend and try again. '
+          'Tried APIs: ${AppConfig.baseUrls.join(', ')}',
         );
-        _local.syncProblemsFromGoal(goalProblems);
-        return;
       }
       rethrow;
     }

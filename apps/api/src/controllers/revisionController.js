@@ -2,7 +2,7 @@ const { Op } = require('sequelize');
 const { Problem, RevisionProgress, RevisionHistory } = require('../models');
 const { completeStage, keepSameStage } = require('../services/revisionEngine');
 const { incrementDailyLog } = require('../services/dailyLogService');
-const { toDateOnly } = require('../utils/date');
+const { addDays, toDateOnly } = require('../utils/date');
 
 const getTodayRevisions = async (req, res) => {
   const userId = req.user.id;
@@ -17,7 +17,24 @@ const getTodayRevisions = async (req, res) => {
     order: [['nextReviewDate', 'ASC']]
   });
 
-  res.json({ revisions: rows });
+  if (rows.length > 0) {
+    return res.json({ revisions: rows });
+  }
+
+  const upcoming = await RevisionProgress.findAll({
+    include: [{ model: Problem, where: { userId }, attributes: ['id', 'title', 'pattern', 'difficulty', 'platform'] }],
+    where: {
+      currentStage: { [Op.notIn]: ['REVISE', 'COMPLETED'] },
+      nextReviewDate: {
+        [Op.gt]: today,
+        [Op.lte]: addDays(today, 10)
+      }
+    },
+    order: [['nextReviewDate', 'ASC']],
+    limit: 10
+  });
+
+  return res.json({ revisions: upcoming });
 };
 
 const completeRevision = async (req, res) => {

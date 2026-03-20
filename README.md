@@ -33,9 +33,15 @@ API base URL: `http://localhost:4000/api`
 ### Steps
 1. `cd apps/mobile`
 2. `flutter pub get`
-3. Confirm backend URL in `lib/core/utils/app_config.dart`
+3. Choose API URL:
+   - Android emulator default: `http://10.0.2.2:4000/api`
+   - iOS simulator / desktop default: `http://127.0.0.1:4000/api`
+   - Physical device: pass LAN URL with `--dart-define=API_BASE_URL=http://<YOUR_LOCAL_IP>:4000/api`
 4. Run app:
    - `flutter run`
+
+Example for physical phone:
+- `flutter run --dart-define=API_BASE_URL=http://192.168.1.20:4000/api`
 
 ## Implemented Features
 - Problem logging
