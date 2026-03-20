@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../utils/app_config.dart';
 
 class ApiClient {
@@ -17,12 +18,9 @@ class ApiClient {
   final Dio _dio;
   final List<String> _baseUrls;
   int _activeBaseUrlIndex = 0;
-  DateTime? _offlineUntil;
 
-  Future<Response<dynamic>> get(String path, {Map<String, dynamic>? queryParameters}) async {
-    if (_isInOfflineCooldown()) {
-      throw _offlineDioException(path);
-    }
+  Future<Response<dynamic>> get(String path,
+      {Map<String, dynamic>? queryParameters}) async {
     return _executeWithFailover(
       () => _dio.get(path, queryParameters: queryParameters),
       path,
@@ -30,9 +28,6 @@ class ApiClient {
   }
 
   Future<Response<dynamic>> post(String path, {Object? data}) async {
-    if (_isInOfflineCooldown()) {
-      throw _offlineDioException(path);
-    }
     return _executeWithFailover(
       () => _dio.post(path, data: data),
       path,
@@ -47,55 +42,39 @@ class ApiClient {
         error.type == DioExceptionType.sendTimeout;
   }
 
-  bool _isInOfflineCooldown() {
-    final until = _offlineUntil;
-    if (until == null) return false;
-    if (DateTime.now().isAfter(until)) {
-      _offlineUntil = null;
-      return false;
-    }
-    return true;
-  }
-
-  void _updateOfflineCooldown(Object error) {
-    if (!isConnectivityError(error)) return;
-    _offlineUntil = DateTime.now().add(const Duration(seconds: 30));
-  }
-
   Future<Response<dynamic>> _executeWithFailover(
     Future<Response<dynamic>> Function() request,
     String path,
   ) async {
-    Object? lastError;
     while (true) {
       try {
+        debugPrint('API ${_dio.options.method} ${_dio.options.baseUrl}$path');
         return await request();
       } catch (error) {
-        lastError = error;
+        if (isConnectivityError(error)) {
+          debugPrint(
+              'API connectivity failure at ${_dio.options.baseUrl}$path: $error');
+        }
         if (isConnectivityError(error) && _switchToNextBaseUrl()) {
           continue;
         }
-        _updateOfflineCooldown(error);
         rethrow;
       }
     }
     // Keeps analyzer happy for static flow; loop always returns/throws.
     // ignore: dead_code
-    throw lastError ?? _offlineDioException(path);
+    throw DioException(
+      requestOptions: RequestOptions(path: path),
+      type: DioExceptionType.unknown,
+      message: 'Unknown API failure',
+    );
   }
 
   bool _switchToNextBaseUrl() {
     if (_activeBaseUrlIndex + 1 >= _baseUrls.length) return false;
     _activeBaseUrlIndex += 1;
     _dio.options.baseUrl = _baseUrls[_activeBaseUrlIndex];
+    debugPrint('Switching API base URL to ${_dio.options.baseUrl}');
     return true;
-  }
-
-  DioException _offlineDioException(String path) {
-    return DioException(
-      requestOptions: RequestOptions(path: path),
-      type: DioExceptionType.connectionError,
-      message: 'Offline cooldown active',
-    );
   }
 }
