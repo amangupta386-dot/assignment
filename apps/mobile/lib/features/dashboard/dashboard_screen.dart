@@ -6,7 +6,6 @@ import 'package:dsa_prep_coach/features/goals/bloc/goal_bloc.dart';
 import 'package:dsa_prep_coach/features/goals/weekly_goal_screen.dart';
 import 'package:dsa_prep_coach/features/plan/bloc/plan_bloc.dart';
 import 'package:dsa_prep_coach/features/plan/today_plan_screen.dart';
-import 'package:dsa_prep_coach/features/problems/add_problem_screen.dart';
 import 'package:dsa_prep_coach/features/problems/bloc/problem_bloc.dart';
 import 'package:dsa_prep_coach/features/revision/bloc/revision_bloc.dart';
 import 'problem_list_screen.dart';
@@ -45,13 +44,6 @@ class DashboardScreen extends StatelessWidget {
               Navigator.push(context, MaterialPageRoute(builder: (_) => const ProblemListScreen()));
             },
             child: const Text('Problems List'),
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton(
-            onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const AddProblemScreen()));
-            },
-            child: const Text('Add Problem'),
           ),
           const SizedBox(height: 8),
           OutlinedButton(

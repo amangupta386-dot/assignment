@@ -10,9 +10,15 @@ const createProblemSchema = Joi.object({
 
 const weeklyGoalSchema = Joi.object({
   weekStart: Joi.date().iso().optional(),
-  targetProblems: Joi.number().integer().min(1).required(),
-  targetRevisions: Joi.number().integer().min(1).required(),
-  focusPatterns: Joi.array().items(Joi.string().trim().max(80)).default([])
+  goalProblems: Joi.array()
+    .items(
+      Joi.object({
+        problemName: Joi.string().trim().min(2).max(120).required(),
+        patternName: Joi.string().trim().min(2).max(120).required()
+      })
+    )
+    .min(1)
+    .required()
 });
 
 const weekPlanSchema = Joi.object({

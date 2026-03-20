@@ -25,6 +25,16 @@ class TodayPlanScreen extends StatelessWidget {
               Text('Day Type: ${plan.dayType}', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
               Text('Status: ${plan.status}'),
+              if (plan.assignedGoalProblem != null) ...[
+                const SizedBox(height: 16),
+                Card(
+                  child: ListTile(
+                    title: Text(plan.assignedGoalProblem!.problemName),
+                    subtitle: Text(plan.assignedGoalProblem!.patternName),
+                    leading: const Icon(Icons.flag_outlined),
+                  ),
+                ),
+              ],
               const SizedBox(height: 16),
               ...entries.map((entry) {
                 final data = Map<String, dynamic>.from(entry.value as Map);

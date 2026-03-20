@@ -117,6 +117,7 @@ class LocalFallbackStore {
   DailyPlanModel getTodayPlan() {
     final today = _toDate(DateTime.now());
     if (_todayPlan != null && _todayPlan!.date == today) return _todayPlan!;
+    final assigned = _assignedGoalProblemForDate(DateTime.now());
 
     _todayPlan = DailyPlanModel(
       id: _planId++,
@@ -127,6 +128,7 @@ class LocalFallbackStore {
         'problems': <String, dynamic>{'target': 3, 'done': 0},
         'revisions': <String, dynamic>{'target': 5, 'done': 0},
       },
+      assignedGoalProblem: assigned,
     );
     return _todayPlan!;
   }
@@ -152,20 +154,18 @@ class LocalFallbackStore {
       dayType: plan.dayType,
       status: completed ? 'COMPLETED' : 'PENDING',
       tasks: tasks,
+      assignedGoalProblem: plan.assignedGoalProblem,
     );
     return _todayPlan!;
   }
 
   void upsertWeeklyGoal({
-    required int targetProblems,
-    required int targetRevisions,
-    required List<String> focusPatterns,
+    required List<GoalProblemItem> goalProblems,
   }) {
     _goal = WeeklyGoalModel(
-      targetProblems: targetProblems,
-      targetRevisions: targetRevisions,
-      focusPatterns: focusPatterns,
+      goalProblems: goalProblems,
     );
+    _todayPlan = null;
   }
 
   WeeklyGoalModel? getCurrentWeeklyGoal() => _goal;
@@ -174,8 +174,8 @@ class LocalFallbackStore {
     final now = DateTime.now();
     final start = now.subtract(Duration(days: now.weekday - 1));
     final end = start.add(const Duration(days: 6));
-    final targetProblems = _goal?.targetProblems ?? 0;
-    final targetRevisions = _goal?.targetRevisions ?? 0;
+    final targetProblems = _goal?.goalProblems.length ?? 0;
+    final targetRevisions = _goal?.goalProblems.length ?? 0;
 
     final actualProblems = _problems.where((p) => !_isBeforeDay(p.createdAt, start) && !_isAfterDay(p.createdAt, end)).length;
     final actualRevisions = _revisionCompletions.where((d) => !_isBeforeDay(d, start) && !_isAfterDay(d, end)).length;
@@ -220,6 +220,13 @@ class LocalFallbackStore {
 
   bool _isBeforeDay(DateTime left, DateTime right) => DateTime(left.year, left.month, left.day).isBefore(DateTime(right.year, right.month, right.day));
   bool _isAfterDay(DateTime left, DateTime right) => DateTime(left.year, left.month, left.day).isAfter(DateTime(right.year, right.month, right.day));
+
+  GoalProblemItem? _assignedGoalProblemForDate(DateTime date) {
+    final goals = _goal?.goalProblems ?? const <GoalProblemItem>[];
+    if (goals.isEmpty) return null;
+    final mondayBasedIndex = date.weekday - 1;
+    return goals[mondayBasedIndex % goals.length];
+  }
 
   String _dayTypeFromWeekday(int weekday) {
     if (weekday == DateTime.saturday || weekday == DateTime.sunday) return 'HEAVY';

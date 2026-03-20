@@ -13,14 +13,12 @@ abstract class GoalEvent extends Equatable {
 class LoadCurrentGoal extends GoalEvent {}
 
 class SaveGoal extends GoalEvent {
-  const SaveGoal({required this.targetProblems, required this.targetRevisions, required this.focusPatterns});
+  const SaveGoal({required this.goalProblems});
 
-  final int targetProblems;
-  final int targetRevisions;
-  final List<String> focusPatterns;
+  final List<GoalProblemItem> goalProblems;
 
   @override
-  List<Object?> get props => [targetProblems, targetRevisions, focusPatterns];
+  List<Object?> get props => [goalProblems];
 }
 
 class GoalState extends Equatable {
@@ -60,9 +58,7 @@ class GoalBloc extends Bloc<GoalEvent, GoalState> {
     emit(state.copyWith(isLoading: true, error: null));
     try {
       await _repository.upsertWeeklyGoal(
-        targetProblems: event.targetProblems,
-        targetRevisions: event.targetRevisions,
-        focusPatterns: event.focusPatterns,
+        goalProblems: event.goalProblems,
       );
       final goal = await _repository.getCurrentWeeklyGoal();
       emit(state.copyWith(isLoading: false, goal: goal));

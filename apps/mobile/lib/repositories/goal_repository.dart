@@ -9,22 +9,17 @@ class GoalRepository {
   final LocalFallbackStore _local = LocalFallbackStore.instance;
 
   Future<void> upsertWeeklyGoal({
-    required int targetProblems,
-    required int targetRevisions,
-    required List<String> focusPatterns,
+    required List<GoalProblemItem> goalProblems,
   }) async {
+    final payload = goalProblems.map((e) => e.toJson()).toList();
     try {
       await _apiClient.post('/goals/weekly', data: {
-        'targetProblems': targetProblems,
-        'targetRevisions': targetRevisions,
-        'focusPatterns': focusPatterns,
+        'goalProblems': payload,
       });
     } catch (e) {
       if (_apiClient.isConnectivityError(e)) {
         _local.upsertWeeklyGoal(
-          targetProblems: targetProblems,
-          targetRevisions: targetRevisions,
-          focusPatterns: focusPatterns,
+          goalProblems: goalProblems,
         );
         return;
       }
