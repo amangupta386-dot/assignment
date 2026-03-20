@@ -38,6 +38,7 @@ class TodayRevisionScreen extends StatelessWidget {
       body: SelectionArea(
         child: BlocBuilder<RevisionBloc, RevisionState>(
           builder: (context, state) {
+            final colorScheme = Theme.of(context).colorScheme;
             if (state.isLoading && state.items.isEmpty) {
               return const Center(child: CircularProgressIndicator());
             }
@@ -65,9 +66,9 @@ class TodayRevisionScreen extends StatelessWidget {
                   margin: const EdgeInsets.only(bottom: 14),
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: colorScheme.surface,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0xFFD9E2EC)),
+                    border: Border.all(color: colorScheme.outlineVariant),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -84,10 +85,10 @@ class TodayRevisionScreen extends StatelessWidget {
                             margin: const EdgeInsets.only(bottom: 10),
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF8FAFC),
+                              color: colorScheme.surfaceContainerLowest,
                               borderRadius: BorderRadius.circular(12),
                               border:
-                                  Border.all(color: const Color(0xFFE6EDF5)),
+                                  Border.all(color: colorScheme.outlineVariant),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,

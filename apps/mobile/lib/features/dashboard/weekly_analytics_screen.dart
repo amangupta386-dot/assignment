@@ -316,6 +316,7 @@ class _ProgressRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final progress =
         target <= 0 ? 0.0 : (current / target).clamp(0, 1).toDouble();
     return Column(
@@ -333,7 +334,7 @@ class _ProgressRow extends StatelessWidget {
           child: LinearProgressIndicator(
             value: progress,
             minHeight: 10,
-            backgroundColor: const Color(0xFFE2E8F0),
+            backgroundColor: colorScheme.surfaceContainerHighest,
           ),
         ),
         const SizedBox(height: 6),
@@ -389,6 +390,7 @@ class _MonthWeekCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
@@ -417,7 +419,7 @@ class _MonthWeekCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF1F5F9),
+                        color: colorScheme.surfaceContainerLow,
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Text('${metric.shortLabel}: ${metric.completed}'),
@@ -487,12 +489,13 @@ class _DataPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Text('$label: $value'),
     );
