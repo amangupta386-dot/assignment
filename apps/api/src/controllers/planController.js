@@ -14,8 +14,26 @@ const sanitizeGoalProblems = (input) =>
     }))
     .filter((item) => item.problemName && item.patternName);
 
+const getActiveGoalProblems = async (userId, date) => {
+  const dateOnly = dayjs(date).format("YYYY-MM-DD");
+  const goal = await WeeklyGoal.findOne({
+    where: {
+      userId,
+      weekStart: { [Op.lte]: dateOnly },
+      weekEnd: { [Op.gte]: dateOnly }
+    },
+    order: [["weekStart", "DESC"]]
+  });
+  if (!goal) return [];
+
+  return sanitizeGoalProblems(goal.focusPatterns);
+};
+
 const getAssignedGoalProblem = async (userId, date) => {
   const dateOnly = dayjs(date).format("YYYY-MM-DD");
+  const goalProblems = await getActiveGoalProblems(userId, dateOnly);
+  if (!goalProblems.length) return null;
+
   const goal = await WeeklyGoal.findOne({
     where: {
       userId,
@@ -26,18 +44,17 @@ const getAssignedGoalProblem = async (userId, date) => {
   });
   if (!goal) return null;
 
-  const goalProblems = sanitizeGoalProblems(goal.focusPatterns);
-  if (!goalProblems.length) return null;
-
   const dayOffset = dayjs(dateOnly).diff(dayjs(goal.weekStart), "day");
   return goalProblems[Math.max(0, dayOffset) % goalProblems.length];
 };
 
 const getAssignedGoalProblemContext = async (userId, date) => {
+  const weeklyGoalProblems = await getActiveGoalProblems(userId, date);
   const assignedGoalProblem = await getAssignedGoalProblem(userId, date);
   if (!assignedGoalProblem) {
     return {
       assignedGoalProblem: null,
+      weeklyGoalProblems,
       dayOneCompleted: false,
       assignedProblemCurrentStage: null
     };
@@ -55,6 +72,7 @@ const getAssignedGoalProblemContext = async (userId, date) => {
   if (!problem) {
     return {
       assignedGoalProblem,
+      weeklyGoalProblems,
       dayOneCompleted: false,
       assignedProblemCurrentStage: null
     };
@@ -64,6 +82,7 @@ const getAssignedGoalProblemContext = async (userId, date) => {
 
   return {
     assignedGoalProblem,
+    weeklyGoalProblems,
     dayOneCompleted: Boolean(progress && progress.currentStage !== revisionStages.REVISE),
     assignedProblemCurrentStage: progress?.currentStage || null
   };

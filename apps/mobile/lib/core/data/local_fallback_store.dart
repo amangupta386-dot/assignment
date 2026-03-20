@@ -144,6 +144,7 @@ class LocalFallbackStore {
     final today = _toDate(DateTime.now());
     if (_todayPlan != null && _todayPlan!.date == today) return _todayPlan!;
     final assigned = _assignedGoalProblemForDate(DateTime.now());
+    final activeGoal = getCurrentWeeklyGoal();
 
     _todayPlan = DailyPlanModel(
       id: _planId++,
@@ -155,6 +156,7 @@ class LocalFallbackStore {
         'revisions': <String, dynamic>{'target': 5, 'done': 0},
       },
       assignedGoalProblem: assigned,
+      weeklyGoalProblems: activeGoal?.goalProblems ?? const <GoalProblemItem>[],
       dayOneCompleted: _isAssignedProblemBeyondDayOne(assigned),
       assignedProblemCurrentStage: _assignedProblemCurrentStage(assigned),
     );
@@ -184,6 +186,7 @@ class LocalFallbackStore {
       status: completed ? 'COMPLETED' : 'PENDING',
       tasks: tasks,
       assignedGoalProblem: plan.assignedGoalProblem,
+      weeklyGoalProblems: plan.weeklyGoalProblems,
       dayOneCompleted: _isAssignedProblemBeyondDayOne(plan.assignedGoalProblem),
       assignedProblemCurrentStage:
           _assignedProblemCurrentStage(plan.assignedGoalProblem),
@@ -197,6 +200,7 @@ class LocalFallbackStore {
       status: refreshed.status,
       tasks: refreshed.tasks,
       assignedGoalProblem: refreshed.assignedGoalProblem,
+      weeklyGoalProblems: refreshed.weeklyGoalProblems,
       dayOneCompleted:
           _isAssignedProblemBeyondDayOne(refreshed.assignedGoalProblem),
       assignedProblemCurrentStage:
