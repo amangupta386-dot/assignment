@@ -33,18 +33,22 @@ class LocalFallbackStore {
   final Set<String> _activeDays = <String>{};
 
   List<ProblemModel> getProblems() {
-    return _problems
-        .map(
-          (p) => ProblemModel(
-            id: p.id,
-            title: p.title,
-            platform: p.platform,
-            difficulty: p.difficulty,
-            pattern: p.pattern,
-            initialStatus: p.initialStatus,
-          ),
-        )
-        .toList()
+    return _problems.map(
+      (p) {
+        final revision = _revisions[p.id];
+        final status = revision?.currentStage == _stageCompleted
+            ? _stageCompleted
+            : p.initialStatus;
+        return ProblemModel(
+          id: p.id,
+          title: p.title,
+          platform: p.platform,
+          difficulty: p.difficulty,
+          pattern: p.pattern,
+          initialStatus: status,
+        );
+      },
+    ).toList()
       ..sort((a, b) => b.id.compareTo(a.id));
   }
 

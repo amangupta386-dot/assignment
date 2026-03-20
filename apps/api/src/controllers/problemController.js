@@ -1,4 +1,5 @@
 const { Problem, RevisionProgress } = require("../models");
+const { revisionStages } = require("../constants/enums");
 const { getInitialProgress } = require("../services/revisionEngine");
 const { incrementDailyLog } = require("../services/dailyLogService");
 
@@ -23,8 +24,24 @@ const listProblems = async (req, res) => {
   if (difficulty) where.difficulty = difficulty;
   if (status) where.initialStatus = status;
 
-  const problems = await Problem.findAll({ where, order: [["createdAt", "DESC"]] });
-  res.json({ problems });
+  const problems = await Problem.findAll({
+    where,
+    include: [{ model: RevisionProgress, attributes: ["currentStage"], required: false }],
+    order: [["createdAt", "DESC"]]
+  });
+
+  res.json({
+    problems: problems.map((problem) => {
+      const json = problem.toJSON();
+      const currentStage = json.RevisionProgress?.currentStage || null;
+      return {
+        ...json,
+        initialStatus:
+          currentStage === revisionStages.COMPLETED ? revisionStages.COMPLETED : json.initialStatus,
+        revisionStage: currentStage
+      };
+    })
+  });
 };
 
 module.exports = { createProblem, listProblems };

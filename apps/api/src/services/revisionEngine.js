@@ -18,7 +18,10 @@ const completeStage = (currentStage, completedAt = new Date()) => {
   const rule = forwardConfig[currentStage] || forwardConfig[revisionStages.REVISE];
   return {
     currentStage: rule.nextStage,
-    nextReviewDate: rule.nextStage === revisionStages.COMPLETED ? null : addDays(completedAt, rule.plusDays),
+    nextReviewDate:
+      rule.nextStage === revisionStages.COMPLETED
+        ? toDateOnly(completedAt)
+        : addDays(completedAt, rule.plusDays),
     lastCompletedAt: completedAt
   };
 };
