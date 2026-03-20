@@ -29,7 +29,7 @@ class TodayRevisionScreen extends StatelessWidget {
                     children: [
                       Text(item.title, style: Theme.of(context).textTheme.titleMedium),
                       const SizedBox(height: 4),
-                      Text('${item.currentStage} â€¢ ${item.pattern} â€¢ due ${item.nextReviewDate}'),
+                      Text('${item.stageLabel} • ${item.pattern} • due ${item.nextReviewDate}'),
                       const SizedBox(height: 8),
                       Row(
                         children: [

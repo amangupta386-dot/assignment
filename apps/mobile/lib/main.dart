@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/network/api_client.dart';
 import 'core/theme/app_theme.dart';
+import 'core/utils/app_config.dart';
 import 'features/analytics/bloc/analytics_bloc.dart';
 import 'features/dashboard/dashboard_screen.dart';
 import 'features/goals/bloc/goal_bloc.dart';
@@ -19,6 +20,7 @@ import 'services/notification_service.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await NotificationService.instance.init();
+  debugPrint('Using API base URL: ${AppConfig.baseUrl}');
 
   final apiClient = ApiClient();
 

@@ -1,6 +1,6 @@
 const { Op } = require('sequelize');
 const { Problem, RevisionProgress, RevisionHistory } = require('../models');
-const { completeStage, failStage } = require('../services/revisionEngine');
+const { completeStage, keepSameStage } = require('../services/revisionEngine');
 const { incrementDailyLog } = require('../services/dailyLogService');
 const { toDateOnly } = require('../utils/date');
 
@@ -11,7 +11,7 @@ const getTodayRevisions = async (req, res) => {
   const rows = await RevisionProgress.findAll({
     include: [{ model: Problem, where: { userId }, attributes: ['id', 'title', 'pattern', 'difficulty', 'platform'] }],
     where: {
-      currentStage: { [Op.ne]: 'COMPLETED' },
+      currentStage: { [Op.notIn]: ['REVISE', 'COMPLETED'] },
       nextReviewDate: { [Op.lte]: today }
     },
     order: [['nextReviewDate', 'ASC']]
@@ -56,7 +56,7 @@ const failRevision = async (req, res) => {
   }
 
   const previousStage = progress.currentStage;
-  const next = failStage(new Date());
+  const next = keepSameStage(progress.currentStage, progress.nextReviewDate);
   progress.currentStage = next.currentStage;
   progress.nextReviewDate = next.nextReviewDate;
   progress.lastCompletedAt = next.lastCompletedAt;
@@ -66,7 +66,7 @@ const failRevision = async (req, res) => {
     problemId: Number(problemId),
     stage: previousStage,
     action: 'FAIL',
-    result: 'RESET_TO_REVISE'
+    result: 'RETRY_SAME_STAGE'
   });
 
   res.json({ revision: progress });

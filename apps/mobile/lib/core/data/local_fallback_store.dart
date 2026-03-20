@@ -7,6 +7,12 @@ import '../../models/revision_item.dart';
 import '../../models/weekly_analytics_model.dart';
 import '../../models/weekly_goal_model.dart';
 
+const String _stageDay1Learn = 'REVISE';
+const String _stageDay2ReviseAndSolve = 'SOLVE_AGAIN';
+const String _stageDay5SolveWithoutSeeing = 'SOLVE_WITHOUT_SEEING';
+const String _stageDay10TimerRevisit = 'FINAL_REVISIT';
+const String _stageCompleted = 'COMPLETED';
+
 class LocalFallbackStore {
   LocalFallbackStore._();
 
@@ -61,7 +67,7 @@ class LocalFallbackStore {
       ),
     );
 
-    _revisions[id] = _RevisionRecord(currentStage: 'D1', nextReviewDate: _toDate(now));
+    _revisions[id] = _RevisionRecord(currentStage: _stageDay1Learn, nextReviewDate: _toDate(now));
     _activeDays.add(_toDate(now));
   }
 
@@ -72,7 +78,7 @@ class LocalFallbackStore {
     for (final problem in _problems) {
       final revision = _revisions[problem.id];
       if (revision == null) continue;
-      if (revision.currentStage == 'COMPLETED') continue;
+      if (revision.currentStage == _stageDay1Learn || revision.currentStage == _stageCompleted) continue;
       if (revision.nextReviewDate.compareTo(today) > 0) continue;
 
       rows.add(
@@ -98,7 +104,7 @@ class LocalFallbackStore {
     final nextStage = _stages[nextIndex];
 
     revision.currentStage = nextStage;
-    revision.nextReviewDate = nextStage == 'COMPLETED'
+    revision.nextReviewDate = nextStage == _stageCompleted
         ? _toDate(DateTime.now())
         : _toDate(DateTime.now().add(Duration(days: _reviewDayOffset(nextStage))));
     _revisionCompletions.add(DateTime.now());
@@ -108,7 +114,7 @@ class LocalFallbackStore {
   void failRevision(int problemId) {
     final revision = _revisions[problemId];
     if (revision == null) return;
-    revision.currentStage = 'D1';
+    revision.currentStage = revision.currentStage;
     revision.nextReviewDate = _toDate(DateTime.now());
     _failCountByProblem['$problemId'] = (_failCountByProblem['$problemId'] ?? 0) + 1;
     _activeDays.add(_toDate(DateTime.now()));
@@ -156,6 +162,7 @@ class LocalFallbackStore {
       tasks: tasks,
       assignedGoalProblem: plan.assignedGoalProblem,
     );
+    _promoteDayOneForTodayPlan(plan.date, key);
     return _todayPlan!;
   }
 
@@ -280,6 +287,28 @@ class LocalFallbackStore {
     return goal.goalProblems[index];
   }
 
+  void _promoteDayOneForTodayPlan(String date, String key) {
+    const problemTaskKeys = <String>{'newProblem', 'deepProblems', 'mockProblems', 'problems'};
+    if (!problemTaskKeys.contains(key)) return;
+
+    final goalItem = _assignedGoalProblemForDate(DateTime.parse(date));
+    if (goalItem == null) return;
+
+    final match = _problems.where(
+      (p) =>
+          p.title.trim().toLowerCase() == goalItem.problemName.trim().toLowerCase() &&
+          p.pattern.trim().toLowerCase() == goalItem.patternName.trim().toLowerCase(),
+    );
+    if (match.isEmpty) return;
+    final latest = match.reduce((a, b) => a.id > b.id ? a : b);
+    final revision = _revisions[latest.id];
+    if (revision == null) return;
+    if (revision.currentStage != _stageDay1Learn) return;
+
+    revision.currentStage = _stageDay2ReviseAndSolve;
+    revision.nextReviewDate = _toDate(DateTime.now().add(const Duration(days: 1)));
+  }
+
   String _dayTypeFromWeekday(int weekday) {
     if (weekday == DateTime.saturday || weekday == DateTime.sunday) return 'HEAVY';
     return 'LIGHT';
@@ -287,21 +316,23 @@ class LocalFallbackStore {
 
   int _reviewDayOffset(String stage) {
     switch (stage) {
-      case 'D3':
+      case _stageDay5SolveWithoutSeeing:
         return 3;
-      case 'D7':
-        return 7;
-      case 'D14':
-        return 14;
-      case 'D30':
-        return 30;
+      case _stageDay10TimerRevisit:
+        return 5;
       default:
         return 0;
     }
   }
 }
 
-const List<String> _stages = <String>['D1', 'D3', 'D7', 'D14', 'D30', 'COMPLETED'];
+const List<String> _stages = <String>[
+  _stageDay1Learn,
+  _stageDay2ReviseAndSolve,
+  _stageDay5SolveWithoutSeeing,
+  _stageDay10TimerRevisit,
+  _stageCompleted,
+];
 
 class _ProblemRecord {
   const _ProblemRecord({

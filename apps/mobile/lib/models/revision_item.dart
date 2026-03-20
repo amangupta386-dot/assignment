@@ -13,6 +13,23 @@ class RevisionItem {
   final String currentStage;
   final String nextReviewDate;
 
+  String get stageLabel {
+    switch (currentStage) {
+      case 'REVISE':
+        return 'Day 1: Learn about problem';
+      case 'SOLVE_AGAIN':
+        return 'Day 2: Revise concept and solve problem';
+      case 'SOLVE_WITHOUT_SEEING':
+        return 'Day 5: Solve problem without seeing';
+      case 'FINAL_REVISIT':
+        return 'Day 10: Revisit with timer';
+      case 'COMPLETED':
+        return 'Completed';
+      default:
+        return currentStage;
+    }
+  }
+
   factory RevisionItem.fromJson(Map<String, dynamic> json) {
     final problem = json['Problem'] as Map<String, dynamic>? ?? {};
     return RevisionItem(

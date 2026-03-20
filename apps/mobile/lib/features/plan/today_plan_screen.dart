@@ -18,6 +18,19 @@ class TodayPlanScreen extends StatelessWidget {
           if (plan == null) return const Center(child: Text('No plan available'));
 
           final entries = plan.tasks.entries.where((e) => e.value is Map).toList();
+          const problemTaskKeys = <String>['newProblem', 'deepProblems', 'mockProblems', 'problems'];
+          String? dayOneTaskKey;
+          for (final key in problemTaskKeys) {
+            if (plan.tasks[key] is Map) {
+              dayOneTaskKey = key;
+              break;
+            }
+          }
+          bool dayOneAlreadyDone = false;
+          if (dayOneTaskKey != null) {
+            final data = Map<String, dynamic>.from(plan.tasks[dayOneTaskKey] as Map);
+            dayOneAlreadyDone = (data['done'] as int? ?? 0) > 0;
+          }
 
           return ListView(
             padding: const EdgeInsets.all(16),
@@ -30,7 +43,19 @@ class TodayPlanScreen extends StatelessWidget {
                 Card(
                   child: ListTile(
                     title: Text(plan.assignedGoalProblem!.problemName),
-                    subtitle: Text(plan.assignedGoalProblem!.patternName),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(plan.assignedGoalProblem!.patternName),
+                        const SizedBox(height: 8),
+                        FilledButton(
+                          onPressed: (dayOneTaskKey == null || dayOneAlreadyDone)
+                              ? null
+                              : () => context.read<PlanBloc>().add(MarkTaskDone(dayOneTaskKey!)),
+                          child: Text(dayOneAlreadyDone ? 'Day 1 Completed' : 'Mark Day 1 Done'),
+                        ),
+                      ],
+                    ),
                     leading: const Icon(Icons.flag_outlined),
                   ),
                 ),

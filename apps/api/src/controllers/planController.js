@@ -1,7 +1,9 @@
 const dayjs = require("dayjs");
 const { Op } = require("sequelize");
-const { DailyPlan, WeeklyGoal } = require("../models");
+const { DailyPlan, WeeklyGoal, Problem, RevisionProgress, RevisionHistory } = require("../models");
+const { revisionStages } = require("../constants/enums");
 const { getDayType, createTasksByDayType } = require("../services/planEngine");
+const { completeStage, getInitialProgress } = require("../services/revisionEngine");
 const { toDateOnly } = require("../utils/date");
 
 const sanitizeGoalProblems = (input) =>
@@ -29,6 +31,57 @@ const getAssignedGoalProblem = async (userId, date) => {
 
   const dayOffset = dayjs(dateOnly).diff(dayjs(goal.weekStart), "day");
   return goalProblems[Math.max(0, dayOffset) % goalProblems.length];
+};
+
+const problemStageTaskKeys = new Set(["newProblem", "deepProblems", "mockProblems", "problems"]);
+
+const promoteDayOneToDayTwo = async ({ userId, date, taskKey }) => {
+  if (!problemStageTaskKeys.has(taskKey)) return;
+  const assigned = await getAssignedGoalProblem(userId, date);
+  if (!assigned) return;
+
+  let problem = await Problem.findOne({
+    where: {
+      userId,
+      title: assigned.problemName,
+      pattern: assigned.patternName
+    },
+    order: [["id", "DESC"]]
+  });
+
+  if (!problem) {
+    problem = await Problem.create({
+      userId,
+      title: assigned.problemName,
+      platform: "OTHER",
+      difficulty: "MEDIUM",
+      pattern: assigned.patternName,
+      initialStatus: "NOT_SOLVED"
+    });
+  }
+
+  let progress = await RevisionProgress.findOne({ where: { problemId: problem.id } });
+  if (!progress) {
+    progress = await RevisionProgress.create({
+      problemId: problem.id,
+      ...getInitialProgress(date)
+    });
+  }
+
+  if (progress.currentStage !== revisionStages.REVISE) return;
+
+  const next = completeStage(progress.currentStage, new Date());
+  progress.currentStage = next.currentStage;
+  progress.nextReviewDate = next.nextReviewDate;
+  progress.lastCompletedAt = next.lastCompletedAt;
+  await progress.save();
+
+  await RevisionHistory.create({
+    problemId: problem.id,
+    stage: revisionStages.REVISE,
+    action: "COMPLETE",
+    result: "DAY_1_LEARN_DONE"
+  });
 };
 
 const generateWeekPlan = async (req, res) => {
@@ -103,6 +156,7 @@ const markTaskDone = async (req, res) => {
   if (allDone) plan.status = "COMPLETED";
 
   await plan.save();
+  await promoteDayOneToDayTwo({ userId, date: today, taskKey: key });
   res.json({
     plan: {
       ...plan.toJSON(),

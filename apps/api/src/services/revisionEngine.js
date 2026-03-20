@@ -2,16 +2,16 @@ const { revisionStages } = require("../constants/enums");
 const { addDays, toDateOnly } = require("../utils/date");
 
 const forwardConfig = {
-  [revisionStages.REVISE]: { nextStage: revisionStages.SOLVE_AGAIN, plusDays: 3 },
-  [revisionStages.SOLVE_AGAIN]: { nextStage: revisionStages.SOLVE_WITHOUT_SEEING, plusDays: 8 },
-  [revisionStages.SOLVE_WITHOUT_SEEING]: { nextStage: revisionStages.FINAL_REVISIT, plusDays: 8 },
+  [revisionStages.REVISE]: { nextStage: revisionStages.SOLVE_AGAIN, plusDays: 1 },
+  [revisionStages.SOLVE_AGAIN]: { nextStage: revisionStages.SOLVE_WITHOUT_SEEING, plusDays: 3 },
+  [revisionStages.SOLVE_WITHOUT_SEEING]: { nextStage: revisionStages.FINAL_REVISIT, plusDays: 5 },
   [revisionStages.FINAL_REVISIT]: { nextStage: revisionStages.COMPLETED, plusDays: 0 },
   [revisionStages.COMPLETED]: { nextStage: revisionStages.COMPLETED, plusDays: 0 }
 };
 
 const getInitialProgress = (createdAt = new Date()) => ({
   currentStage: revisionStages.REVISE,
-  nextReviewDate: addDays(createdAt, 2)
+  nextReviewDate: toDateOnly(createdAt)
 });
 
 const completeStage = (currentStage, completedAt = new Date()) => {
@@ -25,7 +25,7 @@ const completeStage = (currentStage, completedAt = new Date()) => {
 
 const failStage = (failedAt = new Date()) => ({
   currentStage: revisionStages.REVISE,
-  nextReviewDate: addDays(failedAt, 2),
+  nextReviewDate: toDateOnly(failedAt),
   lastCompletedAt: null
 });
 
