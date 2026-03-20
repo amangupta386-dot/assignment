@@ -1,0 +1,14 @@
+module.exports = {
+  revisionStages: {
+    REVISE: "REVISE",
+    SOLVE_AGAIN: "SOLVE_AGAIN",
+    SOLVE_WITHOUT_SEEING: "SOLVE_WITHOUT_SEEING",
+    FINAL_REVISIT: "FINAL_REVISIT",
+    COMPLETED: "COMPLETED"
+  },
+  dayTypes: {
+    WEEKDAY: "WEEKDAY",
+    SATURDAY: "SATURDAY",
+    SUNDAY: "SUNDAY"
+  }
+};
