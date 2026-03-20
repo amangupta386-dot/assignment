@@ -95,6 +95,7 @@ class _PatternNoteEditorScreenState extends State<PatternNoteEditorScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final bottomInset = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
       appBar: AppBar(
@@ -103,7 +104,7 @@ class _PatternNoteEditorScreenState extends State<PatternNoteEditorScreen> {
             : 'Edit Pattern Note'),
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+        padding: EdgeInsets.fromLTRB(16, 16, 16, 24 + bottomInset),
         children: [
           Container(
             padding: const EdgeInsets.all(20),
@@ -224,10 +225,14 @@ class _PatternNoteEditorScreenState extends State<PatternNoteEditorScreen> {
             ),
           ),
           const SizedBox(height: 18),
-          FilledButton.icon(
-            onPressed: _isSaving ? null : _save,
-            icon: const Icon(Icons.save_outlined),
-            label: Text(_isSaving ? 'Saving...' : 'Save Pattern Note'),
+          SafeArea(
+            top: false,
+            minimum: const EdgeInsets.only(bottom: 16),
+            child: FilledButton.icon(
+              onPressed: _isSaving ? null : _save,
+              icon: const Icon(Icons.save_outlined),
+              label: Text(_isSaving ? 'Saving...' : 'Save Pattern Note'),
+            ),
           ),
         ],
       ),

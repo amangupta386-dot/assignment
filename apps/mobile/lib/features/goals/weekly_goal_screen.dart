@@ -118,6 +118,7 @@ class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final bottomInset = MediaQuery.of(context).padding.bottom;
     final validGoalCount = _collectGoalProblems().length;
 
     return Scaffold(
@@ -135,7 +136,7 @@ class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
           },
           builder: (context, state) {
             return ListView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 24 + bottomInset),
               children: [
                 Container(
                   padding: const EdgeInsets.all(20),
@@ -315,59 +316,63 @@ class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
                   label: const Text('Add Another Question'),
                 ),
                 const SizedBox(height: 14),
-                FilledButton.icon(
-                  onPressed: state.isLoading
-                      ? null
-                      : () {
-                          final goalProblems = _collectGoalProblems();
-                          if (_fromDate == null || _toDate == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content:
-                                    Text('Please select from and to dates'),
-                              ),
-                            );
-                            return;
-                          }
-                          if (_toDate!.isBefore(_fromDate!)) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content:
-                                    Text('To date must be after from date'),
-                              ),
-                            );
-                            return;
-                          }
-                          if (goalProblems.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                    'Add at least one valid problem and pattern'),
-                              ),
-                            );
-                            return;
-                          }
-                          if (goalProblems.length > _maxGoalQuestions) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                    'You can save up to 15 questions only'),
-                              ),
-                            );
-                            return;
-                          }
-
-                          context.read<GoalBloc>().add(
-                                SaveGoal(
-                                  fromDate: _fromDate!,
-                                  toDate: _toDate!,
-                                  goalProblems: goalProblems,
+                SafeArea(
+                  top: false,
+                  minimum: const EdgeInsets.only(bottom: 16),
+                  child: FilledButton.icon(
+                    onPressed: state.isLoading
+                        ? null
+                        : () {
+                            final goalProblems = _collectGoalProblems();
+                            if (_fromDate == null || _toDate == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content:
+                                      Text('Please select from and to dates'),
                                 ),
                               );
-                        },
-                  icon: const Icon(Icons.save_outlined),
-                  label: Text(
-                    state.isLoading ? 'Saving...' : 'Save Goal Timeline',
+                              return;
+                            }
+                            if (_toDate!.isBefore(_fromDate!)) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content:
+                                      Text('To date must be after from date'),
+                                ),
+                              );
+                              return;
+                            }
+                            if (goalProblems.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                      'Add at least one valid problem and pattern'),
+                                ),
+                              );
+                              return;
+                            }
+                            if (goalProblems.length > _maxGoalQuestions) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                      'You can save up to 15 questions only'),
+                                ),
+                              );
+                              return;
+                            }
+
+                            context.read<GoalBloc>().add(
+                                  SaveGoal(
+                                    fromDate: _fromDate!,
+                                    toDate: _toDate!,
+                                    goalProblems: goalProblems,
+                                  ),
+                                );
+                          },
+                    icon: const Icon(Icons.save_outlined),
+                    label: Text(
+                      state.isLoading ? 'Saving...' : 'Save Goal Timeline',
+                    ),
                   ),
                 ),
                 if (state.error != null) ...[

@@ -28,11 +28,13 @@ class _AddProblemScreenState extends State<AddProblemScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).padding.bottom;
     return Scaffold(
       appBar: AppBar(title: const Text('Add Problem')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+      body: SafeArea(
+        top: false,
+        child: ListView(
+          padding: EdgeInsets.fromLTRB(16, 16, 16, 24 + bottomInset),
           children: [
             TextField(
                 controller: _titleController,
@@ -87,23 +89,27 @@ class _AddProblemScreenState extends State<AddProblemScreen> {
                 }
               },
               builder: (context, state) {
-                return FilledButton(
-                  onPressed: state.isLoading
-                      ? null
-                      : () {
-                          context.read<ProblemBloc>().add(
-                                AddProblem(
-                                  title: _titleController.text.trim(),
-                                  platform: _platform,
-                                  difficulty: _difficulty,
-                                  pattern: _patternController.text.trim(),
-                                  timeComplexity:
-                                      _timeComplexityController.text.trim(),
-                                  initialStatus: _status,
-                                ),
-                              );
-                        },
-                  child: Text(state.isLoading ? 'Saving...' : 'Save'),
+                return SafeArea(
+                  top: false,
+                  minimum: const EdgeInsets.only(bottom: 16),
+                  child: FilledButton(
+                    onPressed: state.isLoading
+                        ? null
+                        : () {
+                            context.read<ProblemBloc>().add(
+                                  AddProblem(
+                                    title: _titleController.text.trim(),
+                                    platform: _platform,
+                                    difficulty: _difficulty,
+                                    pattern: _patternController.text.trim(),
+                                    timeComplexity:
+                                        _timeComplexityController.text.trim(),
+                                    initialStatus: _status,
+                                  ),
+                                );
+                          },
+                    child: Text(state.isLoading ? 'Saving...' : 'Save'),
+                  ),
                 );
               },
             ),
