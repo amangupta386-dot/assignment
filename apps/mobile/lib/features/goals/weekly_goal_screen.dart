@@ -59,6 +59,7 @@ class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
               builder: (context, state) {
                 final goal = state.goal;
                 if (state.isLoading) return const CircularProgressIndicator();
+                if (state.error != null) return Text(state.error!);
                 if (goal == null) return const Text('No current weekly goal');
                 return Text('Current: ${goal.targetProblems} problems, ${goal.targetRevisions} revisions');
               },

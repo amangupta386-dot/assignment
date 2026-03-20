@@ -65,12 +65,24 @@ class RevisionBloc extends Bloc<RevisionEvent, RevisionState> {
   }
 
   Future<void> _onComplete(CompleteRevisionTask event, Emitter<RevisionState> emit) async {
-    await _repository.completeRevision(event.problemId);
-    add(LoadTodayRevisions());
+    emit(state.copyWith(isLoading: true, error: null));
+    try {
+      await _repository.completeRevision(event.problemId);
+      final items = await _repository.getTodayRevisions();
+      emit(state.copyWith(isLoading: false, items: items));
+    } catch (e) {
+      emit(state.copyWith(isLoading: false, error: e.toString()));
+    }
   }
 
   Future<void> _onFail(FailRevisionTask event, Emitter<RevisionState> emit) async {
-    await _repository.failRevision(event.problemId);
-    add(LoadTodayRevisions());
+    emit(state.copyWith(isLoading: true, error: null));
+    try {
+      await _repository.failRevision(event.problemId);
+      final items = await _repository.getTodayRevisions();
+      emit(state.copyWith(isLoading: false, items: items));
+    } catch (e) {
+      emit(state.copyWith(isLoading: false, error: e.toString()));
+    }
   }
 }

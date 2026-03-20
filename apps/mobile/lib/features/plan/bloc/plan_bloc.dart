@@ -61,12 +61,22 @@ class PlanBloc extends Bloc<PlanEvent, PlanState> {
   }
 
   Future<void> _onGenerate(GenerateWeekPlan event, Emitter<PlanState> emit) async {
-    await _repository.generateWeek(weekStart: event.weekStart);
-    add(LoadTodayPlan());
+    emit(state.copyWith(isLoading: true, error: null));
+    try {
+      await _repository.generateWeek(weekStart: event.weekStart);
+      add(LoadTodayPlan());
+    } catch (e) {
+      emit(state.copyWith(isLoading: false, error: e.toString()));
+    }
   }
 
   Future<void> _onMarkTaskDone(MarkTaskDone event, Emitter<PlanState> emit) async {
-    final plan = await _repository.markTaskDone(event.key);
-    emit(state.copyWith(plan: plan));
+    emit(state.copyWith(isLoading: true, error: null));
+    try {
+      final plan = await _repository.markTaskDone(event.key);
+      emit(state.copyWith(isLoading: false, plan: plan));
+    } catch (e) {
+      emit(state.copyWith(isLoading: false, error: e.toString()));
+    }
   }
 }

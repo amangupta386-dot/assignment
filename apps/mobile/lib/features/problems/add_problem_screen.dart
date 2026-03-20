@@ -65,8 +65,12 @@ class _AddProblemScreenState extends State<AddProblemScreen> {
             const SizedBox(height: 16),
             BlocConsumer<ProblemBloc, ProblemState>(
               listener: (context, state) {
-                if (!state.isLoading && state.error == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Problem added')));
+                if (state.error != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.error!)));
+                } else if (!state.isLoading) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Problem added')),
+                  );
                 }
               },
               builder: (context, state) {
