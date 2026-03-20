@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../models/problem_model.dart';
+import '../pattern_notes/pattern_note_link.dart';
 import 'add_problem_screen.dart';
 import 'bloc/problem_bloc.dart';
 
@@ -188,6 +189,8 @@ class _ProblemCard extends StatelessWidget {
                   icon: Icons.hub_outlined,
                   label: item.pattern,
                   background: colorScheme.surfaceContainerLow,
+                  onTap: () =>
+                      openPatternNoteOrShowSnackbar(context, item.pattern),
                 ),
                 _MetaChip(
                   icon: Icons.signal_cellular_alt,
@@ -258,27 +261,36 @@ class _MetaChip extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.background,
+    this.onTap,
   });
 
   final IconData icon;
   final String label;
   final Color background;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: background,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16),
-          const SizedBox(width: 6),
-          Text(label),
-        ],
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: background,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16),
+              const SizedBox(width: 6),
+              Text(label),
+            ],
+          ),
+        ),
       ),
     );
   }

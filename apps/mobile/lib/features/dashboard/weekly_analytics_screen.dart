@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:dsa_prep_coach/features/analytics/bloc/analytics_bloc.dart';
+import 'package:dsa_prep_coach/features/pattern_notes/pattern_note_link.dart';
 import 'package:dsa_prep_coach/models/analytics_dashboard_model.dart';
 
 class WeeklyAnalyticsScreen extends StatelessWidget {
@@ -367,7 +368,15 @@ class _PatternInsightCard extends StatelessWidget {
                 child: Row(
                   children: [
                     Expanded(
-                      child: Text(pattern.pattern),
+                      child: InkWell(
+                        onTap: () => openPatternNoteOrShowSnackbar(
+                            context, pattern.pattern),
+                        borderRadius: BorderRadius.circular(10),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Text(pattern.pattern),
+                        ),
+                      ),
                     ),
                     Text('Solved ${pattern.solved}'),
                     const SizedBox(width: 12),

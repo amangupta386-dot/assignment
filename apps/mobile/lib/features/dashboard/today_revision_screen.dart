@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:dsa_prep_coach/features/pattern_notes/pattern_note_link.dart';
 import 'package:dsa_prep_coach/features/revision/bloc/revision_bloc.dart';
 import 'package:dsa_prep_coach/models/revision_item.dart';
 
@@ -97,7 +98,31 @@ class TodayRevisionScreen extends StatelessWidget {
                                     style:
                                         Theme.of(context).textTheme.titleSmall),
                                 const SizedBox(height: 4),
-                                Text('Pattern: ${item.pattern}'),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  children: [
+                                    Text(
+                                      'Pattern:',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium,
+                                    ),
+                                    ActionChip(
+                                      avatar: const Icon(
+                                        Icons.hub_outlined,
+                                        size: 16,
+                                      ),
+                                      label: Text(item.pattern),
+                                      onPressed: () =>
+                                          openPatternNoteOrShowSnackbar(
+                                        context,
+                                        item.pattern,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                                 const SizedBox(height: 4),
                                 Text(_isDueToday(item.nextReviewDate)
                                     ? 'Due: Today'

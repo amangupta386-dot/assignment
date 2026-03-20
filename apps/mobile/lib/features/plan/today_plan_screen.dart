@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
+import '../pattern_notes/pattern_note_link.dart';
 import 'bloc/plan_bloc.dart';
 
 class TodayPlanScreen extends StatelessWidget {
@@ -211,6 +212,10 @@ class TodayPlanScreen extends StatelessWidget {
                             _PlanChip(
                               icon: Icons.hub_outlined,
                               label: plan.assignedGoalProblem!.patternName,
+                              onTap: () => openPatternNoteOrShowSnackbar(
+                                context,
+                                plan.assignedGoalProblem!.patternName,
+                              ),
                             ),
                             _PlanChip(
                               icon: dayOneAlreadyDone
@@ -332,6 +337,10 @@ class TodayPlanScreen extends StatelessWidget {
                                 _PlanChip(
                                   icon: Icons.auto_awesome_outlined,
                                   label: item.patternName,
+                                  onTap: () => openPatternNoteOrShowSnackbar(
+                                    context,
+                                    item.patternName,
+                                  ),
                                 ),
                               ],
                             ),
@@ -530,27 +539,36 @@ class _PlanChip extends StatelessWidget {
   const _PlanChip({
     required this.icon,
     required this.label,
+    this.onTap,
   });
 
   final IconData icon;
   final String label;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLow,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16),
-          const SizedBox(width: 6),
-          Text(label),
-        ],
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16),
+              const SizedBox(width: 6),
+              Text(label),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -4,9 +4,15 @@ class NotificationService {
   NotificationService._();
 
   static final NotificationService instance = NotificationService._();
-  final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _plugin =
+      FlutterLocalNotificationsPlugin();
+  Future<void>? _initFuture;
 
-  Future<void> init() async {
+  Future<void> init() {
+    return _initFuture ??= _initialize();
+  }
+
+  Future<void> _initialize() async {
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     const ios = DarwinInitializationSettings();
     const settings = InitializationSettings(android: android, iOS: ios);
@@ -14,8 +20,12 @@ class NotificationService {
   }
 
   Future<void> showSimple({required String title, required String body}) async {
-    const android = AndroidNotificationDetails('dsa_channel', 'DSA Reminders', importance: Importance.high);
-    const details = NotificationDetails(android: android, iOS: DarwinNotificationDetails());
-    await _plugin.show(DateTime.now().millisecondsSinceEpoch ~/ 1000, title, body, details);
+    await init();
+    const android = AndroidNotificationDetails('dsa_channel', 'DSA Reminders',
+        importance: Importance.high);
+    const details =
+        NotificationDetails(android: android, iOS: DarwinNotificationDetails());
+    await _plugin.show(
+        DateTime.now().millisecondsSinceEpoch ~/ 1000, title, body, details);
   }
 }

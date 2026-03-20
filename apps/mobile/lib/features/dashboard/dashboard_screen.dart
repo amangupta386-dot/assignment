@@ -5,6 +5,7 @@ import 'package:dsa_prep_coach/features/analytics/bloc/analytics_bloc.dart';
 import 'package:dsa_prep_coach/features/goals/bloc/goal_bloc.dart';
 import 'package:dsa_prep_coach/features/goals/monthly_timeline_screen.dart';
 import 'package:dsa_prep_coach/features/goals/weekly_goal_screen.dart';
+import 'package:dsa_prep_coach/features/pattern_notes/pattern_notes_screen.dart';
 import 'package:dsa_prep_coach/features/plan/bloc/plan_bloc.dart';
 import 'package:dsa_prep_coach/features/plan/today_plan_screen.dart';
 import 'package:dsa_prep_coach/features/problems/bloc/problem_bloc.dart';
@@ -86,6 +87,18 @@ class DashboardScreen extends StatelessWidget {
                 );
               },
               child: const Text('View Monthly Timeline'),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const PatternNotesScreen(),
+                  ),
+                );
+              },
+              child: const Text('Pattern Notes'),
             ),
             const SizedBox(height: 8),
             OutlinedButton(

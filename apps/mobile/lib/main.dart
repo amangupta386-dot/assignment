@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -12,6 +14,7 @@ import 'features/problems/bloc/problem_bloc.dart';
 import 'features/revision/bloc/revision_bloc.dart';
 import 'repositories/analytics_repository.dart';
 import 'repositories/goal_repository.dart';
+import 'repositories/pattern_note_repository.dart';
 import 'repositories/plan_repository.dart';
 import 'repositories/problem_repository.dart';
 import 'repositories/revision_repository.dart';
@@ -19,12 +22,12 @@ import 'services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await NotificationService.instance.init();
   debugPrint('Using API base URL: ${AppConfig.baseUrl}');
 
   final apiClient = ApiClient();
 
   runApp(MyApp(apiClient: apiClient));
+  unawaited(NotificationService.instance.init());
 }
 
 class MyApp extends StatelessWidget {
@@ -41,6 +44,7 @@ class MyApp extends StatelessWidget {
         RepositoryProvider(create: (_) => PlanRepository(apiClient)),
         RepositoryProvider(create: (_) => GoalRepository(apiClient)),
         RepositoryProvider(create: (_) => AnalyticsRepository(apiClient)),
+        RepositoryProvider(create: (_) => PatternNoteRepository()),
       ],
       child: MultiBlocProvider(
         providers: [

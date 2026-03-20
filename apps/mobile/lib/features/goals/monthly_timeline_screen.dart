@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 import '../../models/weekly_goal_model.dart';
+import '../pattern_notes/pattern_note_link.dart';
 import 'bloc/goal_bloc.dart';
 
 class MonthlyTimelineScreen extends StatefulWidget {
@@ -123,8 +124,23 @@ class _WeekTimelineCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: Text(
-                          '${problem.problemName} (${problem.patternName})',
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(problem.problemName),
+                            const SizedBox(height: 6),
+                            ActionChip(
+                              avatar: const Icon(
+                                Icons.hub_outlined,
+                                size: 16,
+                              ),
+                              label: Text(problem.patternName),
+                              onPressed: () => openPatternNoteOrShowSnackbar(
+                                context,
+                                problem.patternName,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],

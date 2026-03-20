@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../pattern_notes/pattern_note_link.dart';
 import '../../models/revision_item.dart';
 import 'bloc/revision_bloc.dart';
 
@@ -8,10 +9,20 @@ class TodayRevisionScreen extends StatelessWidget {
   const TodayRevisionScreen({super.key});
 
   static const List<_StageMeta> _stages = <_StageMeta>[
-    _StageMeta(key: 'REVISE', title: 'Day 1', description: 'Learn about problem'),
-    _StageMeta(key: 'SOLVE_AGAIN', title: 'Day 2', description: 'Revise the concept and solve problem'),
-    _StageMeta(key: 'SOLVE_WITHOUT_SEEING', title: 'Day 5', description: 'Solve problem without seeing'),
-    _StageMeta(key: 'FINAL_REVISIT', title: 'Day 10', description: 'Revisit with timer'),
+    _StageMeta(
+        key: 'REVISE', title: 'Day 1', description: 'Learn about problem'),
+    _StageMeta(
+        key: 'SOLVE_AGAIN',
+        title: 'Day 2',
+        description: 'Revise the concept and solve problem'),
+    _StageMeta(
+        key: 'SOLVE_WITHOUT_SEEING',
+        title: 'Day 5',
+        description: 'Solve problem without seeing'),
+    _StageMeta(
+        key: 'FINAL_REVISIT',
+        title: 'Day 10',
+        description: 'Revisit with timer'),
   ];
 
   bool _isDueToday(String date) {
@@ -27,9 +38,17 @@ class TodayRevisionScreen extends StatelessWidget {
       appBar: AppBar(title: const Text('Today Revisions')),
       body: BlocBuilder<RevisionBloc, RevisionState>(
         builder: (context, state) {
-          if (state.isLoading && state.items.isEmpty) return const Center(child: CircularProgressIndicator());
-          if (state.error != null) return Center(child: Text(state.error!));
-          if (state.items.isEmpty) return const Center(child: Text('No revision stages in the next 10 days'));
+          if (state.isLoading && state.items.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (state.error != null) {
+            return Center(child: Text(state.error!));
+          }
+          if (state.items.isEmpty) {
+            return const Center(
+              child: Text('No revision stages in the next 10 days'),
+            );
+          }
 
           final byStage = <String, List<RevisionItem>>{};
           for (final stage in _stages) {
@@ -56,10 +75,12 @@ class TodayRevisionScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('${stage.title}: ${stage.description}', style: Theme.of(context).textTheme.titleMedium),
+                    Text('${stage.title}: ${stage.description}',
+                        style: Theme.of(context).textTheme.titleMedium),
                     const SizedBox(height: 10),
                     if (stageItems.isEmpty)
-                      Text('No problems in this stage', style: Theme.of(context).textTheme.bodySmall)
+                      Text('No problems in this stage',
+                          style: Theme.of(context).textTheme.bodySmall)
                     else
                       ...stageItems.map(
                         (item) => Container(
@@ -73,21 +94,53 @@ class TodayRevisionScreen extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(item.title, style: Theme.of(context).textTheme.titleSmall),
+                              Text(item.title,
+                                  style:
+                                      Theme.of(context).textTheme.titleSmall),
                               const SizedBox(height: 4),
-                              Text('Pattern: ${item.pattern}'),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  Text(
+                                    'Pattern:',
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium,
+                                  ),
+                                  ActionChip(
+                                    avatar: const Icon(
+                                      Icons.hub_outlined,
+                                      size: 16,
+                                    ),
+                                    label: Text(item.pattern),
+                                    onPressed: () =>
+                                        openPatternNoteOrShowSnackbar(
+                                      context,
+                                      item.pattern,
+                                    ),
+                                  ),
+                                ],
+                              ),
                               const SizedBox(height: 4),
-                              Text(_isDueToday(item.nextReviewDate) ? 'Due: Today' : 'Due: ${item.nextReviewDate}'),
+                              Text(_isDueToday(item.nextReviewDate)
+                                  ? 'Due: Today'
+                                  : 'Due: ${item.nextReviewDate}'),
                               const SizedBox(height: 8),
                               Row(
                                 children: [
                                   FilledButton(
-                                    onPressed: () => context.read<RevisionBloc>().add(CompleteRevisionTask(item.problemId)),
+                                    onPressed: () => context
+                                        .read<RevisionBloc>()
+                                        .add(CompleteRevisionTask(
+                                            item.problemId)),
                                     child: const Text('Done'),
                                   ),
                                   const SizedBox(width: 8),
                                   OutlinedButton(
-                                    onPressed: () => context.read<RevisionBloc>().add(FailRevisionTask(item.problemId)),
+                                    onPressed: () => context
+                                        .read<RevisionBloc>()
+                                        .add(FailRevisionTask(item.problemId)),
                                     child: const Text('Fail'),
                                   ),
                                 ],
