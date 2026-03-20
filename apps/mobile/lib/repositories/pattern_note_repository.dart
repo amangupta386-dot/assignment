@@ -32,7 +32,7 @@ class PatternNoteRepository {
 
   Future<PatternNoteModel?> getNoteByPattern(String patternName) async {
     final normalized = normalizePattern(patternName);
-    final notes = await getAllNotes();
+    final notes = List<PatternNoteModel>.from(await getAllNotes());
     for (final note in notes) {
       if (note.normalizedPattern == normalized) {
         return note;
@@ -52,7 +52,7 @@ class PatternNoteRepository {
         ? normalizedCurrent
         : normalizePattern(previousPatternName);
 
-    final notes = await getAllNotes();
+    final notes = List<PatternNoteModel>.from(await getAllNotes());
     final existingIndex = notes.indexWhere(
       (note) =>
           note.normalizedPattern == normalizedPrevious ||
