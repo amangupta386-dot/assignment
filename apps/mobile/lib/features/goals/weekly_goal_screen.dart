@@ -232,7 +232,7 @@ class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: _GoalStatTile(
-                              label: 'Recommended',
+                              label: 'Target',
                               value:
                                   '${planningInsights?.recommendedTarget ?? 0}',
                             ),
