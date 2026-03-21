@@ -244,5 +244,9 @@ module.exports = {
   upsertWeeklyGoal,
   getCurrentWeeklyGoal,
   getMonthlyTimeline,
-  getWeeklyGoalRecommendation
+  getWeeklyGoalRecommendation,
+  __testables: {
+    sanitizeGoalProblems,
+    recommendTarget
+  }
 };

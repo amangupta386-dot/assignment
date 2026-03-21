@@ -20,6 +20,7 @@ class LocalFallbackStore {
   static final LocalFallbackStore instance = LocalFallbackStore._();
 
   final DateFormat _dateFormat = DateFormat('yyyy-MM-dd');
+  DateTime Function() _nowProvider = DateTime.now;
 
   int _problemId = 1;
   int _planId = 1;
@@ -31,6 +32,21 @@ class LocalFallbackStore {
   final List<WeeklyGoalModel> _timelines = <WeeklyGoalModel>[];
   DailyPlanModel? _todayPlan;
   final Set<String> _activeDays = <String>{};
+
+  DateTime _now() => _nowProvider();
+
+  void resetForTesting({DateTime Function()? nowProvider}) {
+    _problemId = 1;
+    _planId = 1;
+    _problems.clear();
+    _revisions.clear();
+    _failCountByProblem.clear();
+    _revisionCompletions.clear();
+    _timelines.clear();
+    _todayPlan = null;
+    _activeDays.clear();
+    _nowProvider = nowProvider ?? DateTime.now;
+  }
 
   List<ProblemModel> getProblems() {
     return _problems.map(
@@ -61,7 +77,7 @@ class LocalFallbackStore {
     required String timeComplexity,
     required String initialStatus,
   }) {
-    final now = DateTime.now();
+    final now = _now();
     final id = _problemId++;
     _problems.add(
       _ProblemRecord(
@@ -82,7 +98,7 @@ class LocalFallbackStore {
   }
 
   List<RevisionItem> getTodayRevisions() {
-    final today = _toDate(DateTime.now());
+    final today = _toDate(_now());
     final rows = <RevisionItem>[];
 
     for (final problem in _problems) {
@@ -120,39 +136,40 @@ class LocalFallbackStore {
 
     revision.currentStage = nextStage;
     revision.nextReviewDate = nextStage == _stageCompleted
-        ? _toDate(DateTime.now())
+        ? _toDate(_now())
         : _toDate(
-            DateTime.now().add(Duration(days: _reviewDayOffset(nextStage))));
+            _now().add(Duration(days: _reviewDayOffset(nextStage))));
     _revisionCompletions.add(
       _RevisionCompletionRecord(
         problemId: problemId,
         stage: completedStage,
-        performedAt: DateTime.now(),
+        performedAt: _now(),
       ),
     );
-    _activeDays.add(_toDate(DateTime.now()));
+    _activeDays.add(_toDate(_now()));
   }
 
   void failRevision(int problemId) {
     final revision = _revisions[problemId];
     if (revision == null) return;
     revision.currentStage = revision.currentStage;
-    revision.nextReviewDate = _toDate(DateTime.now());
+    revision.nextReviewDate = _toDate(_now());
     _failCountByProblem['$problemId'] =
         (_failCountByProblem['$problemId'] ?? 0) + 1;
-    _activeDays.add(_toDate(DateTime.now()));
+    _activeDays.add(_toDate(_now()));
   }
 
   DailyPlanModel getTodayPlan() {
-    final today = _toDate(DateTime.now());
+    final now = _now();
+    final today = _toDate(now);
     if (_todayPlan != null && _todayPlan!.date == today) return _todayPlan!;
-    final assigned = _assignedGoalProblemForDate(DateTime.now());
+    final assigned = _assignedGoalProblemForDate(now);
     final activeGoal = getCurrentWeeklyGoal();
 
     _todayPlan = DailyPlanModel(
       id: _planId++,
       date: today,
-      dayType: _dayTypeFromWeekday(DateTime.now().weekday),
+      dayType: _dayTypeFromWeekday(now.weekday),
       status: 'PENDING',
       tasks: <String, dynamic>{
         'problems': <String, dynamic>{'target': 3, 'done': 0},
@@ -250,7 +267,7 @@ class LocalFallbackStore {
   }
 
   WeeklyGoalModel? getCurrentWeeklyGoal() {
-    final today = _toDate(DateTime.now());
+    final today = _toDate(_now());
     final activeMatches = _timelines
         .where((g) =>
             g.fromDate.compareTo(today) <= 0 && g.toDate.compareTo(today) >= 0)
@@ -287,7 +304,7 @@ class LocalFallbackStore {
   }
 
   WeeklyGoalPlanningInsights getWeeklyGoalPlanningInsights() {
-    final planningStart = _nextPlanningWeekStart(DateTime.now());
+    final planningStart = _nextPlanningWeekStart(_now());
     final planningEnd = planningStart.add(const Duration(days: 6));
 
     final previousGoals = _timelines
@@ -329,7 +346,7 @@ class LocalFallbackStore {
   }
 
   WeeklyAnalytics getWeeklyAnalytics() {
-    final now = DateTime.now();
+    final now = _now();
     final start = now.subtract(Duration(days: now.weekday - 1));
     final end = start.add(const Duration(days: 6));
     final activeGoal = getCurrentWeeklyGoal();
@@ -389,7 +406,7 @@ class LocalFallbackStore {
   }
 
   AnalyticsDashboard getAnalyticsDashboard() {
-    final now = DateTime.now();
+    final now = _now();
     final today = DateTime(now.year, now.month, now.day);
     final weekStart = today.subtract(Duration(days: today.weekday - 1));
     final weekEnd = weekStart.add(const Duration(days: 6));
@@ -579,12 +596,12 @@ class LocalFallbackStore {
 
     revision.currentStage = _stageDay2ReviseAndSolve;
     revision.nextReviewDate =
-        _toDate(DateTime.now().add(const Duration(days: 1)));
+        _toDate(_now().add(const Duration(days: 1)));
     _revisionCompletions.add(
       _RevisionCompletionRecord(
         problemId: latest.id,
         stage: _stageDay1Learn,
-        performedAt: DateTime.now(),
+        performedAt: _now(),
       ),
     );
   }

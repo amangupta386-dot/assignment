@@ -11,22 +11,22 @@ const getDayType = (date) => {
 const createTasksByDayType = (dayType) => {
   if (dayType === dayTypes.SATURDAY) {
     return {
-      deepProblems: { target: 3, done: 0 },
-      patternNotes: { target: 1, done: 0 }
+      problems: { target: 3, done: 0 },
+      revisions: { target: 2, done: 0 }
     };
   }
 
   if (dayType === dayTypes.SUNDAY) {
     return {
-      mockProblems: { target: 5, done: 0 },
+      problems: { target: 5, done: 0 },
+      revisions: { target: 2, done: 0 },
       timerMode: true
     };
   }
 
   return {
-    newProblem: { target: 1, done: 0 },
-    revisionProblem: { target: 1, done: 0 },
-    patternRevision: { target: 1, done: 0 }
+    problems: { target: 1, done: 0 },
+    revisions: { target: 1, done: 0 }
   };
 };
 

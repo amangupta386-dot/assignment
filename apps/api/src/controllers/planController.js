@@ -4,7 +4,7 @@ const { DailyPlan, WeeklyGoal, Problem, RevisionProgress, RevisionHistory } = re
 const { revisionStages } = require("../constants/enums");
 const { getDayType, createTasksByDayType } = require("../services/planEngine");
 const { completeStage, getInitialProgress } = require("../services/revisionEngine");
-const { toDateOnly } = require("../utils/date");
+const { toDateOnly, startOfWeekMonday } = require("../utils/date");
 
 const sanitizeGoalProblems = (input) =>
   (Array.isArray(input) ? input : [])
@@ -14,6 +14,75 @@ const sanitizeGoalProblems = (input) =>
       timeComplexity: String(item?.timeComplexity || "Not set").trim()
     }))
     .filter((item) => item.problemName && item.patternName);
+
+const normalizeTasksForDayType = (tasks, dayType) => {
+  const normalized = {};
+  const source = tasks && typeof tasks === "object" ? tasks : {};
+
+  if (source.problems && typeof source.problems === "object") {
+    normalized.problems = {
+      target: source.problems.target ?? 0,
+      done: source.problems.done ?? 0
+    };
+  } else {
+    const legacyProblemTask =
+      source.newProblem ||
+      source.deepProblems ||
+      source.mockProblems;
+    if (legacyProblemTask && typeof legacyProblemTask === "object") {
+      normalized.problems = {
+        target: legacyProblemTask.target ?? 0,
+        done: legacyProblemTask.done ?? 0
+      };
+    }
+  }
+
+  if (source.revisions && typeof source.revisions === "object") {
+    normalized.revisions = {
+      target: source.revisions.target ?? 0,
+      done: source.revisions.done ?? 0
+    };
+  } else {
+    const legacyRevisionTask =
+      source.revisions ||
+      source.revisionProblem ||
+      source.patternRevision ||
+      source.patternNotes;
+    if (legacyRevisionTask && typeof legacyRevisionTask === "object") {
+      normalized.revisions = {
+        target: legacyRevisionTask.target ?? 0,
+        done: legacyRevisionTask.done ?? 0
+      };
+    }
+  }
+
+  if (source.timerMode === true) {
+    normalized.timerMode = true;
+  }
+
+  const defaults = createTasksByDayType(dayType);
+  if (!normalized.problems && defaults.problems) {
+    normalized.problems = { ...defaults.problems };
+  }
+  if (!normalized.revisions && defaults.revisions) {
+    normalized.revisions = { ...defaults.revisions };
+  }
+  if (defaults.timerMode && normalized.timerMode !== true) {
+    normalized.timerMode = true;
+  }
+
+  return normalized;
+};
+
+const ensureNormalizedPlanTasks = async (plan) => {
+  const normalizedTasks = normalizeTasksForDayType(plan.tasks, plan.dayType);
+  if (JSON.stringify(plan.tasks) === JSON.stringify(normalizedTasks)) {
+    return plan;
+  }
+  plan.tasks = normalizedTasks;
+  await plan.save();
+  return plan;
+};
 
 const findRelevantGoal = async (userId, dateOnly) => {
   const activeGoal = await WeeklyGoal.findOne({
@@ -171,6 +240,7 @@ const generateWeekPlan = async (req, res) => {
       defaults: { userId, date, dayType, tasks }
     });
 
+    await ensureNormalizedPlanTasks(plan);
     created.push(plan);
   }
 
@@ -197,6 +267,7 @@ const getTodayPlan = async (req, res) => {
     where: { userId, date: today },
     defaults: { userId, date: today, dayType, tasks }
   });
+  await ensureNormalizedPlanTasks(plan);
   const assignment = await getAssignedGoalProblemContext(userId, today);
 
   res.json({
@@ -216,6 +287,7 @@ const markTaskDone = async (req, res) => {
     where: { userId, date: today },
     defaults: { userId, date: today, dayType: getDayType(today), tasks: createTasksByDayType(getDayType(today)) }
   });
+  await ensureNormalizedPlanTasks(plan);
 
   const tasks = { ...plan.tasks };
   if (!tasks[key] || typeof tasks[key] !== "object") {
@@ -242,4 +314,12 @@ const markTaskDone = async (req, res) => {
   });
 };
 
-module.exports = { generateWeekPlan, getTodayPlan, markTaskDone };
+module.exports = {
+  generateWeekPlan,
+  getTodayPlan,
+  markTaskDone,
+  __testables: {
+    sanitizeGoalProblems,
+    normalizeTasksForDayType
+  }
+};
