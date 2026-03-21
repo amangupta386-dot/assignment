@@ -13,17 +13,22 @@ class WeeklyGoalScreen extends StatefulWidget {
 }
 
 class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
-  static const int _maxGoalQuestions = 15;
+  static const int _maxGoalQuestions = 7;
 
   final List<_GoalProblemRow> _rows = <_GoalProblemRow>[_GoalProblemRow()];
   final DateFormat _dateFormat = DateFormat('yyyy-MM-dd');
   DateTime? _fromDate;
   DateTime? _toDate;
+  bool _appliedPlanningInsights = false;
+  int _handledSaveVersion = 0;
 
   @override
   void initState() {
     super.initState();
     _resetFormState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<GoalBloc>().add(LoadGoalPlanningInsights());
+    });
   }
 
   @override
@@ -67,7 +72,7 @@ class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
     if (_rows.length >= _maxGoalQuestions) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('You can add up to 15 questions in one week'),
+          content: Text('You can add up to 7 questions in one week'),
         ),
       );
       return;
@@ -94,6 +99,41 @@ class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
       ..add(_GoalProblemRow());
     _fromDate = null;
     _toDate = null;
+  }
+
+  void _applyPlanningInsights(WeeklyGoalPlanningInsights insights) {
+    final parsedFrom = DateTime.tryParse(insights.fromDate);
+    final parsedTo = DateTime.tryParse(insights.toDate);
+    final recommended = insights.recommendedTarget.clamp(1, _maxGoalQuestions);
+    final carryForward = insights.carryForwardProblems.take(_maxGoalQuestions);
+
+    for (final row in _rows) {
+      row.dispose();
+    }
+
+    _rows
+      ..clear()
+      ..addAll(
+        carryForward.map(
+          (item) => _GoalProblemRow(
+            problem: item.problemName,
+            pattern: item.patternName,
+            timeComplexity: item.timeComplexity,
+          ),
+        ),
+      );
+
+    while (_rows.length < recommended) {
+      _rows.add(_GoalProblemRow());
+    }
+
+    if (_rows.isEmpty) {
+      _rows.add(_GoalProblemRow());
+    }
+
+    _fromDate = parsedFrom;
+    _toDate = parsedTo;
+    _appliedPlanningInsights = true;
   }
 
   List<GoalProblemItem> _collectGoalProblems() {
@@ -126,15 +166,30 @@ class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
       body: SelectionArea(
         child: BlocConsumer<GoalBloc, GoalState>(
           listenWhen: (previous, current) =>
-              previous.saveVersion != current.saveVersion,
+              previous.saveVersion != current.saveVersion ||
+              previous.planningInsights != current.planningInsights,
           listener: (context, state) {
-            _resetFormState();
-            setState(() {});
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Goal timeline saved')),
-            );
+            if (state.planningInsights != null && !_appliedPlanningInsights) {
+              setState(() {
+                _applyPlanningInsights(state.planningInsights!);
+              });
+            }
+
+            if (state.saveVersion > _handledSaveVersion) {
+              _handledSaveVersion = state.saveVersion;
+              _resetFormState();
+              _appliedPlanningInsights = false;
+              context.read<GoalBloc>().add(LoadGoalPlanningInsights());
+              setState(() {});
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Goal timeline saved')),
+              );
+            }
           },
           builder: (context, state) {
+            final planningInsights = state.planningInsights;
+            final lastWeek = planningInsights?.lastWeek;
+
             return ListView(
               padding: EdgeInsets.fromLTRB(16, 16, 16, 24 + bottomInset),
               children: [
@@ -152,7 +207,7 @@ class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Plan Your Week',
+                        'Plan The Upcoming Week',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.w700,
@@ -160,7 +215,7 @@ class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Add 10 to 15 questions for the week so Today Plan can show the assigned question and extra questions when you have more time.',
+                        'Set up to 7 problems for the next week. Your target is adapted from last week so the app keeps pushing you without building a bad backlog.',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: Colors.white.withValues(alpha: 0.9),
                             ),
@@ -175,17 +230,19 @@ class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          const Expanded(
+                          Expanded(
                             child: _GoalStatTile(
-                              label: 'Limit',
-                              value: '15',
+                              label: 'Recommended',
+                              value:
+                                  '${planningInsights?.recommendedTarget ?? 0}',
                             ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: _GoalStatTile(
-                              label: 'Rows',
-                              value: '${_rows.length}',
+                              label: 'Carry',
+                              value:
+                                  '${planningInsights?.carryForwardProblems.length ?? 0}',
                             ),
                           ),
                         ],
@@ -193,6 +250,112 @@ class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
                     ],
                   ),
                 ),
+                if (planningInsights != null) ...[
+                  const SizedBox(height: 16),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Target Recommendation',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Recommended total target: ${planningInsights.recommendedTarget}',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleSmall
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Suggested fresh problems to add: ${planningInsights.suggestedNewProblems}',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          if (lastWeek != null &&
+                              lastWeek.plannedCount > 0) ...[
+                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: colorScheme.surfaceContainerLow,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Last Week Performance',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleSmall
+                                        ?.copyWith(fontWeight: FontWeight.w700),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    '${lastWeek.completedDayOneCount}/${lastWeek.plannedCount} Day 1 completions',
+                                  ),
+                                  Text(
+                                    'Completion rate: ${lastWeek.completionRate}%',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(
+                                          color: colorScheme.onSurfaceVariant,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+                if (planningInsights != null &&
+                    planningInsights.carryForwardProblems.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    'Carry Forward Problems',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 10),
+                  ...planningInsights.carryForwardProblems.map(
+                    (item) => Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: colorScheme.outlineVariant),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.problemName,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleSmall
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            '${item.patternName} • ${item.timeComplexity}',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(color: colorScheme.onSurfaceVariant),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 16),
                 Card(
                   child: Padding(
@@ -201,7 +364,7 @@ class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Weekly Timeline',
+                          'Planning Window',
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const SizedBox(height: 12),
@@ -234,7 +397,7 @@ class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
                   children: [
                     Expanded(
                       child: Text(
-                        'Questions For This Week',
+                        'Problems For Next Week',
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ),
@@ -346,7 +509,7 @@ class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text(
-                                      'Add at least one valid problem and pattern'),
+                                      'Add at least one valid problem, pattern, and time complexity'),
                                 ),
                               );
                               return;
@@ -355,7 +518,7 @@ class _WeeklyGoalScreenState extends State<WeeklyGoalScreen> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text(
-                                      'You can save up to 15 questions only'),
+                                      'You can save up to 7 questions only'),
                                 ),
                               );
                               return;

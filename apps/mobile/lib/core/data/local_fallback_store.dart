@@ -251,13 +251,27 @@ class LocalFallbackStore {
 
   WeeklyGoalModel? getCurrentWeeklyGoal() {
     final today = _toDate(DateTime.now());
-    final matches = _timelines
+    final activeMatches = _timelines
         .where((g) =>
             g.fromDate.compareTo(today) <= 0 && g.toDate.compareTo(today) >= 0)
         .toList();
-    if (matches.isEmpty) return null;
-    matches.sort((a, b) => b.fromDate.compareTo(a.fromDate));
-    return matches.first;
+    if (activeMatches.isNotEmpty) {
+      activeMatches.sort((a, b) => b.fromDate.compareTo(a.fromDate));
+      return activeMatches.first;
+    }
+
+    final pastMatches =
+        _timelines.where((g) => g.fromDate.compareTo(today) <= 0).toList();
+    if (pastMatches.isNotEmpty) {
+      pastMatches.sort((a, b) => b.fromDate.compareTo(a.fromDate));
+      return pastMatches.first;
+    }
+
+    final futureMatches =
+        _timelines.where((g) => g.fromDate.compareTo(today) >= 0).toList();
+    if (futureMatches.isEmpty) return null;
+    futureMatches.sort((a, b) => a.fromDate.compareTo(b.fromDate));
+    return futureMatches.first;
   }
 
   List<WeeklyGoalModel> getMonthlyTimeline(DateTime month) {
@@ -270,6 +284,48 @@ class LocalFallbackStore {
       return !(to.isBefore(monthStart) || from.isAfter(monthEnd));
     }).toList()
       ..sort((a, b) => a.fromDate.compareTo(b.fromDate));
+  }
+
+  WeeklyGoalPlanningInsights getWeeklyGoalPlanningInsights() {
+    final planningStart = _nextPlanningWeekStart(DateTime.now());
+    final planningEnd = planningStart.add(const Duration(days: 6));
+
+    final previousGoals = _timelines
+        .where((goal) => goal.toDate.compareTo(_toDate(planningStart)) < 0)
+        .toList()
+      ..sort((a, b) => b.fromDate.compareTo(a.fromDate));
+
+    final recentPerformance =
+        previousGoals.take(3).map(_buildGoalPerformanceSummary).toList();
+
+    final lastWeek = recentPerformance.isNotEmpty
+        ? recentPerformance.first
+        : const WeeklyGoalPerformanceSummary(
+            label: '',
+            fromDate: '',
+            toDate: '',
+            plannedCount: 0,
+            completedDayOneCount: 0,
+            completionRate: 0,
+            unfinishedProblems: [],
+          );
+
+    final carryForwardProblems = lastWeek.unfinishedProblems;
+    final recommendedTarget = _recommendNextTarget(
+      recentPerformance,
+      carryForwardProblems.length,
+    );
+
+    return WeeklyGoalPlanningInsights(
+      fromDate: _toDate(planningStart),
+      toDate: _toDate(planningEnd),
+      recommendedTarget: recommendedTarget,
+      suggestedNewProblems:
+          (recommendedTarget - carryForwardProblems.length).clamp(0, 7).toInt(),
+      carryForwardProblems: carryForwardProblems,
+      lastWeek: lastWeek,
+      recentPerformance: recentPerformance,
+    );
   }
 
   WeeklyAnalytics getWeeklyAnalytics() {
@@ -484,18 +540,7 @@ class LocalFallbackStore {
           .isAfter(DateTime(right.year, right.month, right.day));
 
   GoalProblemItem? _assignedGoalProblemForDate(DateTime date) {
-    final dateOnly = _toDate(date);
-    final goal = _timelines
-        .where((g) =>
-            g.fromDate.compareTo(dateOnly) <= 0 &&
-            g.toDate.compareTo(dateOnly) >= 0)
-        .fold<WeeklyGoalModel?>(
-          null,
-          (prev, curr) =>
-              prev == null || curr.fromDate.compareTo(prev.fromDate) > 0
-                  ? curr
-                  : prev,
-        );
+    final goal = getCurrentWeeklyGoal();
     if (goal == null || goal.goalProblems.isEmpty) return null;
 
     final startDate = DateTime.tryParse(goal.fromDate);
@@ -630,6 +675,119 @@ class LocalFallbackStore {
       final parsed = DateTime.parse(value);
       return !_isBeforeDay(parsed, start) && !_isAfterDay(parsed, end);
     }).length;
+  }
+
+  WeeklyGoalPerformanceSummary _buildGoalPerformanceSummary(
+      WeeklyGoalModel goal) {
+    final goalKeys = goal.goalProblems
+        .map((item) =>
+            '${item.problemName.trim().toLowerCase()}|${item.patternName.trim().toLowerCase()}')
+        .toSet();
+
+    final completedKeys = <String>{};
+    for (final record in _revisionCompletions) {
+      if (record.stage != _stageDay1Learn) continue;
+      final performedAt = record.performedAt;
+      final dateOnly = _toDate(performedAt);
+      if (dateOnly.compareTo(goal.fromDate) < 0 ||
+          dateOnly.compareTo(goal.toDate) > 0) {
+        continue;
+      }
+
+      _ProblemRecord? problem;
+      for (final item in _problems) {
+        if (item.id == record.problemId) {
+          problem = item;
+          break;
+        }
+      }
+      if (problem == null) continue;
+
+      final key =
+          '${problem.title.trim().toLowerCase()}|${problem.pattern.trim().toLowerCase()}';
+      if (goalKeys.contains(key)) {
+        completedKeys.add(key);
+      }
+    }
+
+    final unfinishedProblems = goal.goalProblems
+        .where((item) => !completedKeys.contains(
+            '${item.problemName.trim().toLowerCase()}|${item.patternName.trim().toLowerCase()}'))
+        .toList();
+
+    final completedDayOneCount =
+        goal.goalProblems.length - unfinishedProblems.length;
+    final plannedCount = goal.goalProblems.length;
+
+    return WeeklyGoalPerformanceSummary(
+      label: '${goal.fromDate} to ${goal.toDate}',
+      fromDate: goal.fromDate,
+      toDate: goal.toDate,
+      plannedCount: plannedCount,
+      completedDayOneCount: completedDayOneCount,
+      completionRate: plannedCount == 0
+          ? 0
+          : ((completedDayOneCount / plannedCount) * 100).round(),
+      unfinishedProblems: unfinishedProblems,
+    );
+  }
+
+  int _recommendNextTarget(
+    List<WeeklyGoalPerformanceSummary> recentPerformance,
+    int carryForwardCount,
+  ) {
+    if (recentPerformance.isEmpty) {
+      return carryForwardCount < 4 ? 4 : carryForwardCount.clamp(0, 7);
+    }
+
+    final averageCompleted = (recentPerformance.fold<int>(
+                0, (sum, item) => sum + item.completedDayOneCount) /
+            recentPerformance.length)
+        .round();
+    final lastWeek = recentPerformance.first;
+    var recommended = averageCompleted;
+
+    if (lastWeek.completionRate >= 85) {
+      recommended += 1;
+    } else if (lastWeek.completionRate >= 70) {
+      recommended = averageCompleted + 1;
+    } else if (lastWeek.completionRate < 50) {
+      recommended = averageCompleted < 3 ? 3 : averageCompleted;
+    }
+
+    if (recentPerformance.length >= 2 &&
+        recentPerformance.take(2).every((item) => item.completionRate >= 85)) {
+      final bestRecent = recentPerformance
+          .take(2)
+          .map((item) => item.completedDayOneCount)
+          .reduce((a, b) => a > b ? a : b);
+      if (recommended < bestRecent + 1) {
+        recommended = bestRecent + 1;
+      }
+    }
+
+    if (recommended < carryForwardCount) {
+      recommended = carryForwardCount;
+    }
+    if (recommended < 3) recommended = 3;
+    if (recommended > 7) recommended = 7;
+    return recommended;
+  }
+
+  DateTime _nextPlanningWeekStart(DateTime now) {
+    final startOfCurrentWeek = now.subtract(Duration(days: now.weekday - 1));
+    if (now.weekday != DateTime.sunday) {
+      return DateTime(
+        startOfCurrentWeek.year,
+        startOfCurrentWeek.month,
+        startOfCurrentWeek.day,
+      );
+    }
+    return DateTime(
+      startOfCurrentWeek.year,
+      startOfCurrentWeek.month,
+      startOfCurrentWeek.day + 7,
+    );
   }
 
   List<MonthlyWeekBreakdown> _buildMonthlyWeekBreakdown(

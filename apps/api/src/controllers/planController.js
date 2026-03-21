@@ -11,13 +11,12 @@ const sanitizeGoalProblems = (input) =>
     .map((item) => ({
       problemName: String(item?.problemName || "").trim(),
       patternName: String(item?.patternName || "").trim(),
-      timeComplexity: String(item?.timeComplexity || "").trim()
+      timeComplexity: String(item?.timeComplexity || "Not set").trim()
     }))
-    .filter((item) => item.problemName && item.patternName && item.timeComplexity);
+    .filter((item) => item.problemName && item.patternName);
 
-const getActiveGoalProblems = async (userId, date) => {
-  const dateOnly = dayjs(date).format("YYYY-MM-DD");
-  const goal = await WeeklyGoal.findOne({
+const findRelevantGoal = async (userId, dateOnly) => {
+  const activeGoal = await WeeklyGoal.findOne({
     where: {
       userId,
       weekStart: { [Op.lte]: dateOnly },
@@ -25,6 +24,29 @@ const getActiveGoalProblems = async (userId, date) => {
     },
     order: [["weekStart", "DESC"]]
   });
+  if (activeGoal) return activeGoal;
+
+  const latestPastGoal = await WeeklyGoal.findOne({
+    where: {
+      userId,
+      weekStart: { [Op.lte]: dateOnly }
+    },
+    order: [["weekStart", "DESC"]]
+  });
+  if (latestPastGoal) return latestPastGoal;
+
+  return WeeklyGoal.findOne({
+    where: {
+      userId,
+      weekStart: { [Op.gte]: dateOnly }
+    },
+    order: [["weekStart", "ASC"]]
+  });
+};
+
+const getActiveGoalProblems = async (userId, date) => {
+  const dateOnly = dayjs(date).format("YYYY-MM-DD");
+  const goal = await findRelevantGoal(userId, dateOnly);
   if (!goal) return [];
 
   return sanitizeGoalProblems(goal.focusPatterns);
@@ -35,14 +57,7 @@ const getAssignedGoalProblem = async (userId, date) => {
   const goalProblems = await getActiveGoalProblems(userId, dateOnly);
   if (!goalProblems.length) return null;
 
-  const goal = await WeeklyGoal.findOne({
-    where: {
-      userId,
-      weekStart: { [Op.lte]: dateOnly },
-      weekEnd: { [Op.gte]: dateOnly }
-    },
-    order: [["weekStart", "DESC"]]
-  });
+  const goal = await findRelevantGoal(userId, dateOnly);
   if (!goal) return null;
 
   const dayOffset = dayjs(dateOnly).diff(dayjs(goal.weekStart), "day");

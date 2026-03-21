@@ -10,6 +10,9 @@ class GoalRepository {
   final ApiClient _apiClient;
   final LocalFallbackStore _local = LocalFallbackStore.instance;
 
+  bool _isNotFoundError(Object error) =>
+      error is DioException && error.response?.statusCode == 404;
+
   Future<void> upsertWeeklyGoal({
     required DateTime fromDate,
     required DateTime toDate,
@@ -50,6 +53,20 @@ class GoalRepository {
     } catch (e) {
       if (_apiClient.isConnectivityError(e)) {
         return _local.getCurrentWeeklyGoal();
+      }
+      rethrow;
+    }
+  }
+
+  Future<WeeklyGoalPlanningInsights> getPlanningInsights() async {
+    try {
+      final response = await _apiClient.get('/goals/weekly/recommendation');
+      return WeeklyGoalPlanningInsights.fromJson(
+        Map<String, dynamic>.from(response.data as Map),
+      );
+    } catch (e) {
+      if (_apiClient.isConnectivityError(e) || _isNotFoundError(e)) {
+        return _local.getWeeklyGoalPlanningInsights();
       }
       rethrow;
     }

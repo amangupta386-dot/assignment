@@ -14,6 +14,8 @@ class LoadCurrentGoal extends GoalEvent {}
 
 class ResetGoalState extends GoalEvent {}
 
+class LoadGoalPlanningInsights extends GoalEvent {}
+
 class SaveGoal extends GoalEvent {
   const SaveGoal({
     required this.fromDate,
@@ -42,6 +44,7 @@ class GoalState extends Equatable {
     this.isLoading = false,
     this.goal,
     this.timelines = const [],
+    this.planningInsights,
     this.error,
     this.saveVersion = 0,
   });
@@ -49,6 +52,7 @@ class GoalState extends Equatable {
   final bool isLoading;
   final WeeklyGoalModel? goal;
   final List<WeeklyGoalModel> timelines;
+  final WeeklyGoalPlanningInsights? planningInsights;
   final String? error;
   final int saveVersion;
 
@@ -56,6 +60,7 @@ class GoalState extends Equatable {
     bool? isLoading,
     WeeklyGoalModel? goal,
     List<WeeklyGoalModel>? timelines,
+    WeeklyGoalPlanningInsights? planningInsights,
     String? error,
     int? saveVersion,
   }) {
@@ -63,18 +68,27 @@ class GoalState extends Equatable {
       isLoading: isLoading ?? this.isLoading,
       goal: goal ?? this.goal,
       timelines: timelines ?? this.timelines,
+      planningInsights: planningInsights ?? this.planningInsights,
       error: error,
       saveVersion: saveVersion ?? this.saveVersion,
     );
   }
 
   @override
-  List<Object?> get props => [isLoading, goal, timelines, error, saveVersion];
+  List<Object?> get props => [
+        isLoading,
+        goal,
+        timelines,
+        planningInsights,
+        error,
+        saveVersion,
+      ];
 }
 
 class GoalBloc extends Bloc<GoalEvent, GoalState> {
   GoalBloc(this._repository) : super(const GoalState()) {
     on<ResetGoalState>(_onReset);
+    on<LoadGoalPlanningInsights>(_onLoadPlanningInsights);
     on<LoadCurrentGoal>(_onLoad);
     on<SaveGoal>(_onSave);
     on<LoadMonthlyTimeline>(_onLoadMonthlyTimeline);
@@ -84,6 +98,21 @@ class GoalBloc extends Bloc<GoalEvent, GoalState> {
 
   void _onReset(ResetGoalState event, Emitter<GoalState> emit) {
     emit(const GoalState());
+  }
+
+  Future<void> _onLoadPlanningInsights(
+      LoadGoalPlanningInsights event, Emitter<GoalState> emit) async {
+    emit(state.copyWith(isLoading: true, error: null));
+    try {
+      final planningInsights = await _repository.getPlanningInsights();
+      emit(state.copyWith(
+        isLoading: false,
+        planningInsights: planningInsights,
+        error: null,
+      ));
+    } catch (e) {
+      emit(state.copyWith(isLoading: false, error: e.toString()));
+    }
   }
 
   Future<void> _onLoad(LoadCurrentGoal event, Emitter<GoalState> emit) async {
